@@ -50,7 +50,7 @@ QMULset::QMULset(string path, bool UNIXenv){
         readdir(Fdir);
         while ((fp = readdir(Fdir)) != NULL) { //iterate over all image and add them to the previously crated vector
             
-            Mat yolo = imread(foldpath + "/" + fp->d_name,IMREAD_GRAYSCALE);
+            Mat yolo = imread(foldpath + "/" + fp->d_name);
             img.back().push_back(yolo.clone());
         }
     }

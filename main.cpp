@@ -17,8 +17,8 @@ using namespace std;
 int main(int argc, const char * argv[]) {
     
     QMULset QMUL = QMULset(QMUL_PATH_ROBIN);
-    //imshow("test",QMUL.get(0, -30, 10));
-    //waitKey();
+    imshow("test",QMUL.get(0, -30, 10));
+    waitKey();
     
     vector<Mat> set = QMUL.getSet(1);
     kFoldCrossValidation(set, 300);
