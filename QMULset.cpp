@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <dirent.h>
+#include <stdexcept>
 
 #include "QMULset.h"
 
@@ -21,6 +22,9 @@ Mat QMULset::getByIndex(int face, int tilt, int pan){
 */
 QMULset::QMULset(string path, bool UNIXenv){
     DIR* Qdir = opendir(path.c_str()); //load the main folder
+    if (!Qdir) {
+        throw invalid_argument("path does not exist");
+    }
     struct dirent * dp;
     readdir(Qdir); //the 2 first item return by read dir are parent and current folder we don't want to iterate on them so we skip them
     readdir(Qdir);
@@ -29,27 +33,27 @@ QMULset::QMULset(string path, bool UNIXenv){
     while ((dp = readdir(Qdir)) != NULL) { //iterate over all model folders
         string foldpath;
         cout << dp->d_name << endl; //display the folder name, very optionnal
-        
+
         if (UNIXenv) {
            foldpath = path + "/" + dp->d_name; //construct path to current model if system is unix based
         }
         else{
             foldpath = path + "\\" + dp->d_name; //construct path to current model if system is DOS based
         }
-        
+
         DIR* Fdir = opendir(foldpath.c_str()); //open model folder
-        
+
         string name = dp->d_name;
         name.erase(name.length()-4); //erase grey at the end of folder name to get subject name
         nameMap.insert(pair<string, int>(name, i)); //insert the subject name in the map and map it to it's index (i)
         img.push_back(vector<Mat>()); //push a new vector of image in our vector of model
         i++;
-        
+
         struct dirent * fp;
         readdir(Fdir); //same as before, avoid ../ and ./
         readdir(Fdir);
         while ((fp = readdir(Fdir)) != NULL) { //iterate over all image and add them to the previously crated vector
-            
+
             Mat yolo = imread(foldpath + "/" + fp->d_name);
             cvtColor(yolo, yolo, CV_BGR2GRAY);
             img.back().push_back(yolo.clone());
@@ -59,7 +63,7 @@ QMULset::QMULset(string path, bool UNIXenv){
 
 //get image by knoing subject name, tilt in [-30;30] and pan in [0;180]
 Mat QMULset::get(string subjectName, int tilt, int pan){
-    
+
     return get(nameMap.find(subjectName)->second, tilt, pan); //map name to index and pass to another getter
 }
 
