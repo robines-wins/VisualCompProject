@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 
-#define QMUL_TILT_COUNT 19
-#define QMUL_PAN_COUNT 7
+#define QMUL_TILT_COUNT 7
+#define QMUL_PAN_COUNT 19
 #define QMUL_IMG_SIZE 100
 
 using namespace cv;

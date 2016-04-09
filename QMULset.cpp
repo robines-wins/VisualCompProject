@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <dirent.h>
 #include <stdexcept>
+#include <cstring>
 
 #include "QMULset.h"
 
@@ -13,7 +14,7 @@ using namespace std;
 
 //return the image by knowing directly the vector of vector indices
 Mat QMULset::getByIndex(int face, int tilt, int pan){
-    Mat toR = img[face][tilt*QMUL_TILT_COUNT + pan];
+    Mat toR = img[face][tilt * QMUL_PAN_COUNT + pan];
     return toR;
 }
 
@@ -35,32 +36,43 @@ QMULset::QMULset(string path, bool UNIXenv){
         }
 
         string foldpath;
-        cout << dp->d_name << endl; //display the folder name, very optionnal
-
         if (UNIXenv) {
            foldpath = path + "/" + dp->d_name; //construct path to current model if system is unix based
-        }
-        else{
+        } else {
             foldpath = path + "\\" + dp->d_name; //construct path to current model if system is DOS based
         }
 
         DIR* Fdir = opendir(foldpath.c_str()); //open model folder
-        string name = dp->d_name;
+
+        string name = string(dp->d_name);
         name.erase(name.length()-4); //erase grey at the end of folder name to get subject name
         nameMap.insert(pair<string, int>(name, i)); //insert the subject name in the map and map it to it's index (i)
-        img.push_back(vector<Mat>()); //push a new vector of image in our vector of model
-        i++;
+
+        vector<Mat> poses; // Create the pose vector
+        poses.resize(QMUL_TILT_COUNT * QMUL_PAN_COUNT); // ensure we have enough room for all poses
 
         struct dirent * fp;
-        while ((fp = readdir(Fdir)) != NULL) { //iterate over all image and add them to the previously crated vector
+        while ((fp = readdir(Fdir)) != NULL) { //iterate over all image and add them to the previously created vector
             if (fp->d_name[0] == '.') {
                 // Is .. or might be a system file like .DS_Store
                 continue;
             }
-            Mat yolo = imread(foldpath + "/" + fp->d_name);
-            cvtColor(yolo, yolo, CV_BGR2GRAY);
-            img.back().push_back(yolo.clone());
+            Mat pose = imread(foldpath + (UNIXenv ? "/" : "\\") + fp->d_name);
+            cvtColor(pose, pose, CV_BGR2GRAY);
+
+            char* poseName = strtok(fp->d_name, "_");
+            char* tiltCode = strtok(NULL, "_");
+            char* panCode = strtok(NULL, "_");
+            // Remove .ras extension
+            panCode[strlen(panCode) - 4] = '\0';
+            // Code is 60 to 120 for tilt converted to 0 to 6
+            int tilt = stoi(tiltCode) / 10 - 6;
+            // Code is 0 to 180 for pan converted to 0 to 18
+            int pan = stoi(panCode) / 10;
+            poses[tilt * QMUL_PAN_COUNT + pan] = pose;
         }
+        img.push_back(poses); //push a new vector of image in our vector of model
+        i++;
     }
 }
 
@@ -72,7 +84,7 @@ Mat QMULset::get(string subjectName, int tilt, int pan){
 
 //get image by knoing subject index, tilt in [-30;30] and pan in [0;180]
 Mat QMULset::get(int subjectNameIndex, int tilt, int pan){
-    return getByIndex(subjectNameIndex, (tilt+30)/10, pan/10); //transform deegre into index
+    return getByIndex(subjectNameIndex, tilt/10 + 3, pan/10 + 9); //transform deegre into index
 }
 
 //get all the image of a given subject name
