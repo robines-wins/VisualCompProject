@@ -1,19 +1,5 @@
-//
-//  QMULset.h
-//  Project
-//
-//  Created by Robin Solignac on 29/03/2016.
-//  Copyright © 2016 Robin Solignac. All rights reserved.
-//
-
 #ifndef QMULset_h
 #define QMULset_h
-
-#include <stdio.h>
-
-#define QMUL_TILT_COUNT 7
-#define QMUL_PAN_COUNT 19
-#define QMUL_IMG_SIZE 100
 
 using namespace cv;
 using namespace std;
@@ -45,6 +31,5 @@ public:
     Mat allImageFromSubject(int subjectIndex);
 
 };
-
 
 #endif /* QMULset_h */

@@ -5,6 +5,10 @@
 
 #include "QMULset.h"
 
+#define QMUL_TILT_COUNT 7
+#define QMUL_PAN_COUNT 19
+#define QMUL_IMG_SIZE 100
+
 using namespace cv;
 using namespace std;
 
@@ -66,9 +70,9 @@ QMULset::QMULset(string path, bool UNIXenv){
             // Remove .ras extension
             panCode[strlen(panCode) - 4] = '\0';
             // Code is 60 to 120 for tilt converted to 0 to 6
-            int tilt = stoi(tiltCode) / 10 - 6;
+            int tilt = stoi(string(tiltCode)) / 10 - 6;
             // Code is 0 to 180 for pan converted to 0 to 18
-            int pan = stoi(panCode) / 10;
+            int pan = stoi(string(panCode)) / 10;
             poses[tilt * QMUL_PAN_COUNT + pan] = pose;
         }
         img.push_back(poses); //push a new vector of image in our vector of model
