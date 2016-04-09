@@ -108,7 +108,12 @@ void HPset::getPersonSet(int personId, int serie, vector<Mat>& set) {
 }
 
 void HPset::getPoseSet(int tilt, int pan, vector<Mat>& set) {
-
+    size_t pose = poseIndex(tilt, pan);
+    for (size_t index = 0; index < HP_ID_COUNT * HP_SERIE_COUNT; index++) {
+        set.push_back(images[index][pose]);
+        imshow("test", images[index][pose]);
+        waitKey(0);
+    }
 }
 
 Mat HPset::getAllImage(int personId, int serie) {
