@@ -11,6 +11,10 @@
 
 #include <stdio.h>
 
+#define QMUL_TILT_COUNT 19
+#define QMUL_PAN_COUNT 7
+#define QMUL_IMG_SIZE 100
+
 using namespace cv;
 using namespace std;
 
@@ -18,30 +22,28 @@ class QMULset {
 private:
     vector<vector<Mat>> img;
     map<string, int> nameMap;
-    const int shiftPerTilt = 19;
-    
+
     Mat getByIndex(int face, int tilt, int pan);
-    
+
 public:
     QMULset(string path,bool UNIXenv = true);
-    
+
     Mat get(string subjectName, int tilt, int pan);
-    
+
     Mat get(int subjectNameIndex, int tilt, int pan);
-    
+
     vector<Mat> getSet(String subjectName);
-    
+
     vector<Mat> getSet(int tilt, int pan);
-    
+
     vector<Mat> getSet(int index);
-    
+
     vector<Mat> getAll();
-    
+
+    Mat allImageFromSubject(string subjectName);
+
     Mat allImageFromSubject(int subjectIndex);
-    
-    
-    
-    
+
 };
 
 

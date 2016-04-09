@@ -13,7 +13,7 @@ using namespace std;
 
 //return the image by knowing directly the vector of vector indices
 Mat QMULset::getByIndex(int face, int tilt, int pan){
-    Mat toR = img[face][tilt*shiftPerTilt + pan];
+    Mat toR = img[face][tilt*QMUL_TILT_COUNT + pan];
     return toR;
 }
 
@@ -26,11 +26,14 @@ QMULset::QMULset(string path, bool UNIXenv){
         throw invalid_argument("path does not exist");
     }
     struct dirent * dp;
-    readdir(Qdir); //the 2 first item return by read dir are parent and current folder we don't want to iterate on them so we skip them
-    readdir(Qdir);
     int i=0;
     img = vector<vector<Mat>>();
     while ((dp = readdir(Qdir)) != NULL) { //iterate over all model folders
+        if (dp->d_name[0] == '.') {
+            // Is .. or might be a system file like .DS_Store
+            continue;
+        }
+
         string foldpath;
         cout << dp->d_name << endl; //display the folder name, very optionnal
 
@@ -42,7 +45,6 @@ QMULset::QMULset(string path, bool UNIXenv){
         }
 
         DIR* Fdir = opendir(foldpath.c_str()); //open model folder
-
         string name = dp->d_name;
         name.erase(name.length()-4); //erase grey at the end of folder name to get subject name
         nameMap.insert(pair<string, int>(name, i)); //insert the subject name in the map and map it to it's index (i)
@@ -50,10 +52,11 @@ QMULset::QMULset(string path, bool UNIXenv){
         i++;
 
         struct dirent * fp;
-        readdir(Fdir); //same as before, avoid ../ and ./
-        readdir(Fdir);
         while ((fp = readdir(Fdir)) != NULL) { //iterate over all image and add them to the previously crated vector
-
+            if (fp->d_name[0] == '.') {
+                // Is .. or might be a system file like .DS_Store
+                continue;
+            }
             Mat yolo = imread(foldpath + "/" + fp->d_name);
             cvtColor(yolo, yolo, CV_BGR2GRAY);
             img.back().push_back(yolo.clone());
@@ -101,8 +104,12 @@ vector<Mat> QMULset::getSet(int tilt, int pan){
     return all;
 }
 
+Mat QMULset::allImageFromSubject(string subjectName) {
+    return allImageFromSubject(nameMap.find(subjectName)->second);
+}
+
 //return a big image containing all other image TO BE FINISHED
 Mat QMULset::allImageFromSubject(int subjectIndex){
-    Mat canvas = Mat(img[subjectIndex].front().size(), img[subjectIndex].front().type());
-    return canvas;
+
+    return Mat::zeros(0, 0, CV_8U);
 }

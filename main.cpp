@@ -17,7 +17,7 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
 
-    QMULset QMUL = QMULset(qmul);
+    QMULset QMUL = QMULset(string(qmul));
     imshow("test",QMUL.get(0, -30, 10));
     waitKey();
 
