@@ -18,7 +18,7 @@ int main(int argc, const char * argv[]) {
     }
 
     QMULset QMUL = QMULset(string(qmul));
-    imshow("test",QMUL.get(0, -30, 10));
+    imshow("all", QMUL.allImageFromSubject(0));
     waitKey();
 
     vector<Mat> set = QMUL.getSet(1);

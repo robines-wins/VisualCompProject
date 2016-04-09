@@ -120,8 +120,21 @@ Mat QMULset::allImageFromSubject(string subjectName) {
     return allImageFromSubject(nameMap.find(subjectName)->second);
 }
 
-//return a big image containing all other image TO BE FINISHED
-Mat QMULset::allImageFromSubject(int subjectIndex){
-
-    return Mat::zeros(0, 0, CV_8U);
+//return a big image containing all other image
+Mat QMULset::allImageFromSubject(int subjectIndex) {
+    // Create an image of that can contain all images, ordered by tilt and pan
+    Mat all = Mat::zeros(QMUL_TILT_COUNT * QMUL_IMG_SIZE, QMUL_PAN_COUNT * QMUL_IMG_SIZE, CV_8U);
+    // For each image in the set
+    for (size_t tilt = 0; tilt < QMUL_TILT_COUNT; tilt++) {
+        for (size_t pan = 0; pan < QMUL_PAN_COUNT; pan++) {
+            // Get the slot of the full image that will be used
+            size_t allRow = tilt * QMUL_IMG_SIZE;
+            size_t allCol = pan * QMUL_IMG_SIZE;
+            Mat slot = all(Range(allRow, allRow + QMUL_IMG_SIZE), Range(allCol, allCol + QMUL_IMG_SIZE));
+            // Copy the pose into the slot
+            Mat pose = getByIndex(subjectIndex, tilt, pan);
+            pose.copyTo(slot);
+        }
+    }
+    return all;
 }
