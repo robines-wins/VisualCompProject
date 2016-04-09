@@ -18,17 +18,17 @@ public:
 
     Mat get(int subjectNameIndex, int tilt, int pan);
 
-    vector<Mat> getSet(String subjectName);
+    void getPersonSet(String subjectName, vector<Mat>& set);
 
-    vector<Mat> getSet(int tilt, int pan);
+    void getPersonSet(int index, vector<Mat>& set);
 
-    vector<Mat> getSet(int index);
+    void getPoseSet(int tilt, int pan, vector<Mat>& set);
 
-    vector<Mat> getAll();
+    void getAll(vector<Mat>& set);
 
-    Mat allImageFromSubject(string subjectName);
+    Mat getAllImage(string subjectName);
 
-    Mat allImageFromSubject(int subjectIndex);
+    Mat getAllImage(int subjectIndex);
 
 };
 

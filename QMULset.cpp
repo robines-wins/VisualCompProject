@@ -82,7 +82,6 @@ QMULset::QMULset(string path, bool UNIXenv){
 
 //get image by knoing subject name, tilt in [-30;30] and pan in [0;180]
 Mat QMULset::get(string subjectName, int tilt, int pan){
-
     return get(nameMap.find(subjectName)->second, tilt, pan); //map name to index and pass to another getter
 }
 
@@ -92,40 +91,36 @@ Mat QMULset::get(int subjectNameIndex, int tilt, int pan){
 }
 
 //get all the image of a given subject name
-vector<Mat> QMULset::getSet(String subjectName){
-    return getSet(nameMap.find(subjectName)->second); //translat and pass
+void QMULset::getPersonSet(String subjectName, vector<Mat>& set) {
+    getPersonSet(nameMap.find(subjectName)->second, set); //translat and pass
 }
 
 //get all the image of a given subject index
-vector<Mat> QMULset::getSet(int index){
-    return img[index]; //return the vector of images correspondong to the index
+void QMULset::getPersonSet(int index, vector<Mat>& set){
+    set = img[index]; //return the vector of images correspondong to the index
+}
+
+//Return all images corresponding to a given (tilt,pan)
+void QMULset::getPoseSet(int tilt, int pan, vector<Mat>& set) {
+    for (int i = 1; i<img.size(); i++) {
+        set.push_back(get(i,tilt,pan));
+    }
 }
 
 //get one big vector with all images
-vector<Mat> QMULset::getAll(){
-    vector<Mat> all = img.front();
+void QMULset::getAll(vector<Mat>& set) {
     for (int i =1; i<img.size(); i++) { //just flatten the vector of vector
-        all.insert(end (all), begin(img[i]), end(img[i]));
+        set.insert(end(set), begin(img[i]), end(img[i]));
     }
-    return all;
 }
 
 
-//Return all images corresponding to a given (tilt,pan)
-vector<Mat> QMULset::getSet(int tilt, int pan){
-    vector<Mat> all;
-    for (int i = 1; i<img.size(); i++) {
-        all.push_back(get(i,tilt,pan));
-    }
-    return all;
-}
-
-Mat QMULset::allImageFromSubject(string subjectName) {
-    return allImageFromSubject(nameMap.find(subjectName)->second);
+Mat QMULset::getAllImage(string subjectName) {
+    return getAllImage(nameMap.find(subjectName)->second);
 }
 
 //return a big image containing all other image
-Mat QMULset::allImageFromSubject(int subjectIndex) {
+Mat QMULset::getAllImage(int subjectIndex) {
     // Create an image of that can contain all images, ordered by tilt and pan
     Mat all = Mat::zeros(QMUL_TILT_COUNT * QMUL_IMG_SIZE, QMUL_PAN_COUNT * QMUL_IMG_SIZE, CV_8U);
     // For each image in the set
