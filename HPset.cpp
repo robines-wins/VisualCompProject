@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <dirent.h>
 #include <stdexcept>
+#include <algorithm>
 #include <cstring>
 #include <cstdio>
 
@@ -15,9 +16,9 @@
 using namespace cv;
 using namespace std;
 
-Mat crop(Mat& image, int centerX, int centerY) {
+Mat crop(Mat image, int centerX, int centerY) {
     Mat cropped = Mat::zeros(100, 100, CV_8U);
-    Mat face = image(Range(centerY - 50, centerY + 50), Range(centerX - 50, centerX + 50));
+    Mat face = image(Range(max(centerY - 50, 0), min(centerY + 50, image.rows)), Range(max(centerX - 50, 0), min(centerX + 50, image.cols)));
     face.copyTo(cropped);
     return cropped;
 }
@@ -96,4 +97,35 @@ HPset::HPset(string path, bool UNIXenv) {
             images[faceIndex(id, serie)][poseIndex(tilt, pan)] = image;
         }
     }
+}
+
+Mat HPset::get(int personId, int serie, int tilt, int pan) {
+    return images[faceIndex(personId, serie)][poseIndex(tilt, pan)];
+}
+
+void HPset::getPersonSet(int personId, int serie, vector<Mat>& set) {
+    set = images[faceIndex(personId, serie)];
+}
+
+void HPset::getPoseSet(int tilt, int pan, vector<Mat>& set) {
+
+}
+
+Mat HPset::getAllImage(int personId, int serie) {
+    // Create an image of that can contain all images, ordered by tilt and pan
+    Mat all = Mat::zeros(HP_TILT_COUNT * HP_IMG_SIZE, HP_PAN_COUNT * HP_IMG_SIZE, CV_8U);
+    // For each image in the set
+    size_t face = faceIndex(personId, serie);
+    for (size_t tilt = 0; tilt < HP_TILT_COUNT; tilt++) {
+        for (size_t pan = 0; pan < HP_PAN_COUNT; pan++) {
+            // Get the slot of the full image that will be used
+            size_t allRow = tilt * HP_IMG_SIZE;
+            size_t allCol = pan * HP_IMG_SIZE;
+            Mat slot = all(Range(allRow, allRow + HP_IMG_SIZE), Range(allCol, allCol + HP_IMG_SIZE));
+            // Copy the pose into the slot
+            Mat pose = images[face][tilt * HP_PAN_COUNT + pan];
+            pose.copyTo(slot);
+        }
+    }
+    return all;
 }

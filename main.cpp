@@ -26,14 +26,15 @@ int main(int argc, const char * argv[]) {
     QMULset QMUL = QMULset(string(qmul));
     HPset HP = HPset(string(hp));
 
-    imshow("all", QMUL.allImageFromSubject(0));
+    imshow("QMUL 0", QMUL.getAllImage(0));
     waitKey();
 
-//    imshow("all", QMUL.allImageFromSubject(0));
-//    waitKey();
+    imshow("HP 0", HP.getAllImage(1, 1));
+    waitKey();
 
-//    vector<Mat> set = QMUL.getSet(1);
-//    kFoldCrossValidation(set, 300);
+    vector<Mat> set;
+    QMUL.getPersonSet(1, set);
+    kFoldCrossValidation(set, 300);
 
     return 0;
 }
