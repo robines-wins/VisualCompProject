@@ -18,6 +18,7 @@ using namespace std;
 
 //return the image by knowing directly the vector of vector indices
 Mat QMULset::getByIndex(int face, int tilt, int pan){
+    assert (face >= 0 && face < img.size() && tilt >= 0 && tilt < QMUL_TILT_COUNT && pan >= 0 && pan < QMUL_PAN_COUNT);
     Mat toR = img[face][tilt * QMUL_PAN_COUNT + pan];
     return toR;
 }
@@ -49,8 +50,7 @@ QMULset::QMULset(string path, bool UNIXenv){
         DIR* Fdir = opendir(foldpath.c_str()); //open model folder
 
         string name = string(dp->d_name);
-        name.erase(name.length()-4); //erase grey at the end of folder name to get subject name
-        nameMap.insert(pair<string, int>(name, i)); //insert the subject name in the map and map it to it's index (i)
+        nameMap[name] = i; //insert the subject name in the map and map it to it's index (i)
 
         vector<Mat> poses; // Create the pose vector
         poses.resize(QMUL_TILT_COUNT * QMUL_PAN_COUNT); // ensure we have enough room for all poses
@@ -81,8 +81,12 @@ QMULset::QMULset(string path, bool UNIXenv){
 }
 
 //get image by knoing subject name, tilt in [-30;30] and pan in [0;180]
-Mat QMULset::get(string subjectName, int tilt, int pan){
-    return get(nameMap.find(subjectName)->second, tilt, pan); //map name to index and pass to another getter
+Mat QMULset::get(string subjectName, int tilt, int pan) {
+    map<string, int>::iterator pair = nameMap.find(subjectName);
+    if (pair == nameMap.end()) {
+        throw invalid_argument("Not a valid subject name: " + subjectName);
+    }
+    return get(pair->second, tilt, pan); //map name to index and pass to another getter
 }
 
 //get image by knoing subject index, tilt in [-30;30] and pan in [0;180]
@@ -92,11 +96,16 @@ Mat QMULset::get(int subjectNameIndex, int tilt, int pan){
 
 //get all the image of a given subject name
 void QMULset::getPersonSet(String subjectName, vector<Mat>& set) {
-    getPersonSet(nameMap.find(subjectName)->second, set); //translat and pass
+    map<string, int>::iterator pair = nameMap.find(subjectName);
+    if (pair == nameMap.end()) {
+        throw invalid_argument("Not a valid subject name: " + subjectName);
+    }
+    getPersonSet(pair->second, set); //translat and pass
 }
 
 //get all the image of a given subject index
 void QMULset::getPersonSet(int index, vector<Mat>& set){
+    assert (index >= 0 && index < img.size());
     set = img[index]; //return the vector of images correspondong to the index
 }
 
@@ -116,7 +125,11 @@ void QMULset::getAll(vector<Mat>& set) {
 
 
 Mat QMULset::getAllImage(string subjectName) {
-    return getAllImage(nameMap.find(subjectName)->second);
+    map<string, int>::iterator pair = nameMap.find(subjectName);
+    if (pair == nameMap.end()) {
+        throw invalid_argument("Not a valid subject name: " + subjectName);
+    }
+    return getAllImage(pair->second);
 }
 
 //return a big image containing all other image

@@ -26,7 +26,7 @@ Mat crop(Mat image, int centerX, int centerY) {
 size_t faceIndex(int id, int serie) {
     id -= 1;
     serie -= 1;
-    assert(id >= 0 && id < 15 && serie >= 0 && serie < 2);
+    assert (id >= 0 && id < 15 && serie >= 0 && serie < 2);
     return id * HP_SERIE_COUNT + serie;
 }
 
@@ -35,7 +35,7 @@ size_t poseIndex(int tilt, int pan) {
     tilt /= 15;
     pan += 90;
     pan /= 15;
-    assert(tilt >= 0 && tilt < HP_TILT_COUNT && pan >= 0 && pan < HP_PAN_COUNT);
+    assert (tilt >= 0 && tilt < HP_TILT_COUNT && pan >= 0 && pan < HP_PAN_COUNT);
     return tilt * HP_PAN_COUNT + pan;
 }
 

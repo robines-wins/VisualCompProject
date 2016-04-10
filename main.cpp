@@ -26,11 +26,13 @@ int main(int argc, const char * argv[]) {
     QMULset QMUL = QMULset(string(qmul));
     HPset HP = HPset(string(hp));
 
-    imshow("QMUL 0", QMUL.getAllImage(0));
+    imshow("QMUL YongminYGrey", QMUL.getAllImage("YongminYGrey"));
     waitKey();
+    destroyWindow("QMUL YongminYGrey");
 
-    imshow("HP 0", HP.getAllImage(1, 1));
+    imshow("HP Person15 series 2", HP.getAllImage(15, 2));
     waitKey();
+    destroyWindow("HP Person15 series 2");
 
     vector<Mat> set;
     QMUL.getPersonSet(1, set);
