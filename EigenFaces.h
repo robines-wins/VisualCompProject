@@ -23,13 +23,13 @@ Mat computeEigenBase(Mat& data, int numOfComp);
 
 double reconstructionError(Mat& traningM, Mat& testingM, int numOfComp);
 
-double kFoldCrossValidation(vector<Mat> imgSet, int numOfComp, int k = 7, bool testWithtest = true);
+double kFoldCrossValidationReconstruction(vector<Mat> imgSet, int numOfComp, int k = 7, bool testWithtest = true);
 
 void splitM(Mat& dataM, Mat& test, Mat& train,int k, int i);
 
-void anwswerQ3(vector<Mat> set);
+void answerQ3(vector<Mat> set);
 
-void anwswerQ4(vector<Mat> set);
+void answerQ4(vector<Mat> set);
 
 void answerQ5(vector<Mat> set, int optimalfromQ3);
 

@@ -2,14 +2,13 @@
 #include <opencv2/opencv.hpp>
 #include "EigenFaces.h"
 
+#define PATH_FOR_OUTPUT "/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/"
+
 using namespace cv;
 using namespace std;
 //WARNING: all of this function are creating/working with row vector
 
-/*
-static bool ANSWER_Q  = true;
-static bool inri  = false;
-static int ri = 0;*/
+
 
 Mat imagesToPcaMatrix(vector<Mat> imgSet){
     Mat dataM = Mat(0, imgSet.front().rows*imgSet.front().cols, imgSet.front().type());
@@ -37,9 +36,9 @@ Mat backproject(const Mat& vector, const Mat& base){
 }
 
 Mat computeEigenBase(Mat& data, int numOfComp){
-    Mat DtD, EValues, EVector;
-    mulTransposed(data, DtD, true); //eigen work with collum vector so we temporary transpose our matrix of row vectors
-    eigen(DtD, EValues, EVector);
+    Mat mean, EValues, EVector, covar;
+    calcCovarMatrix(data, covar, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
+    eigen(covar, EValues, EVector);
     
     //if (inri) {outputEVectors(EVector);}
     
@@ -80,7 +79,7 @@ double reconstructionError(Mat& traningM, Mat& testingM, int numOfComp){
     
 }
 
-double kFoldCrossValidation(vector<Mat> imgSet, int numOfComp, int k,bool testWithtest){
+double kFoldCrossValidationReconstruction(vector<Mat> imgSet, int numOfComp, int k,bool testWithtest){
     
     
     random_shuffle(imgSet.begin(), imgSet.end()); //shuffle the order of images
@@ -142,12 +141,12 @@ void answerQ3(vector<Mat> set){
     cout <<endl;
     for (int i = 0; i< 13; i++) {
         cout << "k validation for reconstruction of training images" <<endl << endl;
-        cout << kFoldCrossValidation(set, numC[i],7,false)<<endl;
+        cout << kFoldCrossValidationReconstruction(set, numC[i],7,false)<<endl;
     }
     cout <<endl;
     for (int i = 0; i< 13; i++) {
         cout << "k validation for reconstruction of testing images" <<endl << endl;
-        cout << numC[i] <<" " << kFoldCrossValidation(set, numC[i]) <<endl;
+        cout << numC[i] <<" " << kFoldCrossValidationReconstruction(set, numC[i]) <<endl;
     }
 }
 
@@ -160,13 +159,15 @@ void answerQ4(vector<Mat> set){
     Mat mean = Mat(1, train.cols, train.type());
     reduce(train, mean, 0, CV_REDUCE_AVG);
     mean.reshape(1, 100).convertTo(mean, CV_8U);
-    imwrite("/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/means.bmp", mean);
+    string path = PATH_FOR_OUTPUT;
+    imwrite(path + "means.bmp", mean);
     
     Mat base = computeEigenBase(train, 10);
     for (int i = 0; i<10; i++) {
         Mat toOutput;
         base.row(i).reshape(1, 100).convertTo(toOutput, CV_8U);
-        imwrite("/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/Evector" +to_string(i)+".bmp", toOutput);
+        cout << "plop" + to_string(i)<<endl;
+        imwrite(path + "Evector" +to_string(i)+".bmp", toOutput);
     }
     
 }
@@ -184,11 +185,12 @@ void answerQ5(vector<Mat> set, int optimalfromQ3){
         for (int j=0; j<4; j++) {
             Mat toOutput = randImg[j].reshape(1, 100);
             toOutput.convertTo(toOutput, CV_8U);
-            imwrite("/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/random" +to_string(j)+ "_Original_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
+            string path = PATH_FOR_OUTPUT;
+            imwrite(path + "random" +to_string(j)+ "_Original_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
             
             toOutput = backproject(project(randImg[j], base), base).reshape(1, 100);
             toOutput.convertTo(toOutput, CV_8U);
-            imwrite("/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/random" +to_string(j)+ "_reconstruct_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
+            imwrite(path + "random" +to_string(j)+ "_reconstruct_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
         }
     }
     
