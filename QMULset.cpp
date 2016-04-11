@@ -80,7 +80,7 @@ QMULset::QMULset(string path, bool UNIXenv){
     }
 }
 
-//get image by knoing subject name, tilt in [-30;30] and pan in [0;180]
+//get image by knoing subject name, tilt in [-30;30] and pan in [-90; 90]
 Mat QMULset::get(string subjectName, int tilt, int pan) {
     map<string, int>::iterator pair = nameMap.find(subjectName);
     if (pair == nameMap.end()) {
@@ -89,7 +89,7 @@ Mat QMULset::get(string subjectName, int tilt, int pan) {
     return get(pair->second, tilt, pan); //map name to index and pass to another getter
 }
 
-//get image by knoing subject index, tilt in [-30;30] and pan in [0;180]
+//get image by knoing subject index, tilt in [-30;30] and pan in [-90; 90]
 Mat QMULset::get(int subjectNameIndex, int tilt, int pan){
     return getByIndex(subjectNameIndex, tilt/10 + 3, pan/10 + 9); //transform deegre into index
 }
@@ -113,6 +113,45 @@ void QMULset::getPersonSet(int index, vector<Mat>& set){
 void QMULset::getPoseSet(int tilt, int pan, vector<Mat>& set) {
     for (int i = 1; i<img.size(); i++) {
         set.push_back(get(i,tilt,pan));
+    }
+}
+
+size_t getClosestCoarse(vector<int> classes, int value) {
+    int minDistance = 0xFFFF;
+    size_t closest = 0;
+    for (size_t i = 0; i < classes.size(); i++) {
+        int coarse = classes[i];
+        int diff = value - coarse;
+        int distance = diff < 0 ? -diff : diff;
+        if (distance <= minDistance) {
+            minDistance = distance;
+            closest = i;
+        }
+    }
+    return closest;
+}
+
+void QMULset::getCoarsePoseSet(vector<int> tiltClasses, vector<int> panClasses, int tiltIndex, int panIndex, vector<Mat>& set) {
+    vector<int> closeTilts, closePans;
+    // Find all the tilts closest to the coarse one
+    for (size_t i = 0; i < QMUL_TILT_COUNT; i++) {
+        int tilt = i * 10 - 30;
+        if (getClosestCoarse(tiltClasses, tilt) == tiltIndex) {
+            closeTilts.push_back(tilt);
+        }
+    }
+    // Find all the pans closest to the coarse one
+    for (size_t i = 0; i < QMUL_PAN_COUNT; i++) {
+        int pan = i * 10 - 90;
+        if (getClosestCoarse(panClasses, pan) == panIndex) {
+            closePans.push_back(pan);
+        }
+    }
+    // Get all poses for the found close tilt and close pan combinations
+    for (size_t i = 0; i < closeTilts.size(); i++) {
+        for (size_t j = 0; j < closePans.size(); j++) {
+            getPoseSet(closeTilts[i], closePans[j], set);
+        }
     }
 }
 

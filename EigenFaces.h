@@ -47,7 +47,7 @@ public:
     EigenRecognizerNorm(int numOfComp){noc = numOfComp;}
     void train(vector<Mat>& images, vector<double>& labels);
     double labelise(Mat& image);
-    
+
 };
 
 class EigenRecognizerProb : public EigenRecognizer{

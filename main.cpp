@@ -23,19 +23,22 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
 
+    int coarseTilts[] = {-25, 0, 25};
+    int coarsePans[] = {-90, -60, -30, 0, 30, 60, 90};
+    vector<int> tiltClasses(begin(coarseTilts), end(coarseTilts));
+    vector<int> panClasses(begin(coarsePans), end(coarsePans));
+
     QMULset QMUL = QMULset(string(qmul));
+
+    vector<Mat> coarsePoses;
+    QMUL.getCoarsePoseSet(tiltClasses, panClasses, 0, 4, coarsePoses);
+
+    /*imshow("QMUL 0", QMUL.getAllImage(0));
+    waitKey();
+
     HPset HP = HPset(string(hp));
-
-    imshow("QMUL 0", QMUL.getAllImage(0));
-    waitKey();
-
     imshow("HP 0", HP.getAllImage(1, 1));
-    waitKey();
-
-    vector<Mat> set;
-    QMUL.getPersonSet(1, set);
-    //QMUL.getPoseSet(0, 90, set);
-    answerQ4(set);
+    waitKey();*/
 
     return 0;
 }

@@ -14,11 +14,14 @@ HPset.o: HPset.cpp HPset.h
 EigenFaces.o: EigenFaces.cpp EigenFaces.h
 	$(CXX) $(OPENCV_CFLAGS) -c EigenFaces.cpp
 
+EigenFacePoseEstimation.o: EigenFacePoseEstimation.cpp EigenFacePoseEstimation.h
+	$(CXX) $(OPENCV_CFLAGS) -c EigenFacePoseEstimation.cpp
+
 main.o: main.cpp main.h
 	$(CXX) $(OPENCV_CFLAGS) -c main.cpp
 
-main: QMULset.o HPset.o EigenFaces.o main.o
-	$(CXX) $(OPENCV_CFLAGS) $(OPENCV_LIBS) -o main QMULset.o HPset.o EigenFaces.o main.o
+main: QMULset.o HPset.o EigenFaces.o EigenFacePoseEstimation.o main.o
+	$(CXX) $(OPENCV_CFLAGS) $(OPENCV_LIBS) -o main QMULset.o HPset.o EigenFaces.o EigenFacePoseEstimation.o main.o
 
 run: main
 	./main
