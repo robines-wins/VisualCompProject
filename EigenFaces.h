@@ -25,12 +25,43 @@ double reconstructionError(Mat& traningM, Mat& testingM, int numOfComp);
 
 double kFoldCrossValidationReconstruction(vector<Mat> imgSet, int numOfComp, int k = 7, bool testWithtest = true);
 
+
+
 void splitM(Mat& dataM, Mat& test, Mat& train,int k, int i);
 
-void answerQ3(vector<Mat> set);
+vector<int> randomIndexes(int size);
 
-void answerQ4(vector<Mat> set);
+class EigenRecognizer{
+public:
+    virtual void train(vector<Mat>& images, vector<double>& labels) =0;
+    virtual double labelise(Mat& image) =0;
+};
 
-void answerQ5(vector<Mat> set, int optimalfromQ3);
+class EigenRecognizerNorm : public EigenRecognizer{
+private:
+    Mat base;
+    Mat trained;
+    cv::vector<double> labels;
+    int noc;
+public:
+    EigenRecognizerNorm(int numOfComp){noc = numOfComp;}
+    void train(vector<Mat>& images, vector<double>& labels);
+    double labelise(Mat& image);
+    
+};
+
+class EigenRecognizerProb : public EigenRecognizer{
+private:
+    int noc;
+    CvNormalBayesClassifier NGC;
+public:
+    EigenRecognizerProb(int numOfComp){noc = numOfComp; NGC = CvNormalBayesClassifier();}
+    void train(vector<Mat>& images, vector<double>& labels);
+    double labelise(Mat& image);
+};
+
+double recognitionRate(EigenRecognizer& ER, vector<Mat>& testImages, vector<double>& labels);
+
+double kFoldCrossValidationRecognition(EigenRecognizer& ER,vector<Mat> imgSet, vector<double> labels, int k);
 
 #endif /* EigenFaces_hpp */

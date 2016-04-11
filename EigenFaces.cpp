@@ -2,8 +2,6 @@
 #include <opencv2/opencv.hpp>
 #include "EigenFaces.h"
 
-#define PATH_FOR_OUTPUT "/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/"
-
 using namespace cv;
 using namespace std;
 //WARNING: all of this function are creating/working with row vector
@@ -20,19 +18,20 @@ Mat imagesToPcaMatrix(vector<Mat> imgSet){
     return dataM;
 }
 
-Mat project(const Mat& vector, const Mat& base){
-    Mat projection = Mat(1, base.rows, base.type());
-    assert(vector.rows == 1);
+Mat project(const Mat& vectors, const Mat& base){
+    Mat projections = Mat(vectors.rows, base.rows, base.type());
     
-    for (int i =0; i<base.rows; i++) { //compute each coordinate according to the course formula
-        projection.at<double>(0,i) = vector.dot(base.row(i));
+    for (int r = 0; r<vectors.rows; r++) {
+        for (int i =0; i<base.rows; i++) { //compute each coordinate according to the course formula
+            projections.at<double>(r,i) = vectors.row(r).dot(base.row(i));
+        }
     }
-    return projection;
+    
+    return projections;
 }
 
-Mat backproject(const Mat& vector, const Mat& base){
-    assert(vector.rows == 1);
-    return vector*base; //just a base transition because here we have the transition matrix
+Mat backproject(const Mat& vectors, const Mat& base){
+    return vectors*base; //just a base transition because here we have the transition matrix
 }
 
 Mat computeEigenBase(Mat& data, int numOfComp){
@@ -79,6 +78,8 @@ double reconstructionError(Mat& traningM, Mat& testingM, int numOfComp){
     
 }
 
+
+
 double kFoldCrossValidationReconstruction(vector<Mat> imgSet, int numOfComp, int k,bool testWithtest){
     
     
@@ -102,6 +103,47 @@ double kFoldCrossValidationReconstruction(vector<Mat> imgSet, int numOfComp, int
     return reconstructionerror;
     
     
+}
+
+double recognitionRate(EigenRecognizer& ER, vector<Mat>& testImages, vector<double>& labels){
+    assert(testImages.size() == labels.size());
+    int rate = 0.0;
+    
+    for (int i=0; i<testImages.size(); i++) {
+        if (labels[i] == ER.labelise(testImages[i])) {
+            rate++;
+        }
+    }
+    return (double)rate/(double)testImages.size();
+}
+
+double kFoldCrossValidationRecognition(EigenRecognizer& ER,vector<Mat> imgSet, vector<double> labels, int k){
+    vector<int> indexs = randomIndexes(imgSet.size());
+    double recognition = 0.0;
+    
+    vector<Mat> train,test;
+    vector<double> trainl,testl;
+    uint imgperfold = imgSet.size()/k;
+    
+    for (int i = 0; i<k; i++) {
+        
+        for (int j=0; j<imgSet.size(); j++) {
+            if (j>=i*imgperfold && j<(i+1)*imgperfold) {
+                test.push_back(imgSet[indexs[j]]);
+                testl.push_back(labels[indexs[j]]);
+            }
+            else{
+                train.push_back(imgSet[indexs[j]]);
+                trainl.push_back(labels[indexs[j]]);
+            }
+        }
+        
+        ER.train(train, trainl);
+        recognition += recognitionRate(ER, test, testl);
+        
+    }
+    
+    return recognition/(double)k;
 }
 
 void splitM(Mat& dataM, Mat& test, Mat& train,int k, int i){
@@ -132,67 +174,64 @@ void splitM(Mat& dataM, Mat& test, Mat& train,int k, int i){
     
 }
 
-void answerQ3(vector<Mat> set){
-    
-    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,set.front().rows*set.front().cols};
-    for (int i = 0; i<13; i++) {
-        cout<< numC[i] <<endl;
+
+vector<int> randomIndexes(int size){
+    vector<int> randi = vector<int>(size);
+    for (int i=0; i<size; i++) {
+        randi[i] = i;
     }
-    cout <<endl;
-    for (int i = 0; i< 13; i++) {
-        cout << "k validation for reconstruction of training images" <<endl << endl;
-        cout << kFoldCrossValidationReconstruction(set, numC[i],7,false)<<endl;
-    }
-    cout <<endl;
-    for (int i = 0; i< 13; i++) {
-        cout << "k validation for reconstruction of testing images" <<endl << endl;
-        cout << numC[i] <<" " << kFoldCrossValidationReconstruction(set, numC[i]) <<endl;
-    }
+    randShuffle(randi);
+    return randi;
 }
 
-void answerQ4(vector<Mat> set){
-    random_shuffle(set.begin(), set.end());
-    Mat dataM = imagesToPcaMatrix(set);
-    Mat test,train;
-    splitM(dataM, test, train, 7, rand()%7);
-    
-    Mat mean = Mat(1, train.cols, train.type());
-    reduce(train, mean, 0, CV_REDUCE_AVG);
-    mean.reshape(1, 100).convertTo(mean, CV_8U);
-    string path = PATH_FOR_OUTPUT;
-    imwrite(path + "means.bmp", mean);
-    
-    Mat base = computeEigenBase(train, 10);
-    for (int i = 0; i<10; i++) {
-        Mat toOutput;
-        base.row(i).reshape(1, 100).convertTo(toOutput, CV_8U);
-        cout << "plop" + to_string(i)<<endl;
-        imwrite(path + "Evector" +to_string(i)+".bmp", toOutput);
-    }
-    
+
+void EigenRecognizerNorm::train(vector<Mat>& images, vector<double>& labels){
+    Mat data = imagesToPcaMatrix(images);
+    base = computeEigenBase(data, noc);
+    trained = project(data, base);
+    labels = labels;
 }
 
-void answerQ5(vector<Mat> set, int optimalfromQ3){
-    Mat dataM = imagesToPcaMatrix(set);
-    Mat test,train;
-    splitM(dataM, test, train, 7, rand()%7);
+double EigenRecognizerNorm::labelise(Mat image){
+    Mat projection = project(image.reshape(1, 1),base);
+    int nearestIndex = 0;
+    double smallestnorm = numeric_limits<double>::max();
     
-    int numOfComp[] = {1,5,optimalfromQ3};
-    Mat randImg[4] = {train.row(rand()%train.rows), train.row(rand()%train.rows), test.row(rand()%test.rows), test.row(rand()%test.rows)};
-    
-    for (int i=0; i<3; i++) {
-        Mat base = computeEigenBase(train, numOfComp[i]);
-        for (int j=0; j<4; j++) {
-            Mat toOutput = randImg[j].reshape(1, 100);
-            toOutput.convertTo(toOutput, CV_8U);
-            string path = PATH_FOR_OUTPUT;
-            imwrite(path + "random" +to_string(j)+ "_Original_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
-            
-            toOutput = backproject(project(randImg[j], base), base).reshape(1, 100);
-            toOutput.convertTo(toOutput, CV_8U);
-            imwrite(path + "random" +to_string(j)+ "_reconstruct_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
+    for (int i = 0; i<trained.rows; i++) {
+        double tnorm = norm(projection, trained.row(i));
+        if (tnorm<smallestnorm) {
+            smallestnorm = tnorm;
+            nearestIndex = i;
         }
     }
     
+    return labels[nearestIndex];
+}
+
+void EigenRecognizerProb::train(vector<Mat>& images, vector<double>& labels){
+    Mat dataM = imagesToPcaMatrix(images);
+    Mat labelM = Mat(labels.size(), 1, CV_64F);
+    for (int i=0; i<labels.size(); i++) {
+        labelM.at<double>(i, 0) = labels[i];
+    }
+    
+    NGC.train(dataM, labelM);
+}
+
+double EigenRecognizerProb::labelise(Mat& image){
+    return NGC.predict(image.reshape(image.channels(), 1));
     
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
