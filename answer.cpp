@@ -118,9 +118,9 @@ void answerQ8(QMULset QMUL, int optiNOC){
 /*
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {
     size_t numberPoses = tiltClasses.size() * panClasses.size();
-    Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32SC1);
+    Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32F);
     // Train the estimator for each pose use QMUL
-    EigenFacePoseEstimator estimator(numberPoses, 7);
+    EigenFacePoseEstimator estimator(numberPoses, 100);
     for (size_t i = 0; i < tiltClasses.size(); i++) {
         for (size_t j = 0; j < panClasses.size(); j++) {
             vector<Mat> coarsePoses;
@@ -138,11 +138,13 @@ void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> pa
             size_t index = i * panClasses.size() + j;
             for (size_t k = 0; k < coarsePoses.size(); k++) {
                 size_t guess = estimator.estimatePose(coarsePoses[k]);
-                confusion.at<int>(index) = (int) guess;
+                confusion.at<float>(index, guess)++;
                 cout << "Estimated pose " << index << " as " << guess << endl;
             }
         }
     }
+    // Normalize the confustion matrix
+    confusion /= numberPoses;
     // Print the confusion matrix
     cout << confusion << endl;
 }*/

@@ -8,7 +8,7 @@ EigenFacePoseEstimator::~EigenFacePoseEstimator() {
     for (size_t i = 0; i < poseRecognizers.size(); i++) {
         if (poseRecognizers[i] != NULL) {
             delete poseRecognizers[i];
-        } 
+        }
     }
 }
 
@@ -28,6 +28,9 @@ int EigenFacePoseEstimator::estimatePose(Mat face) {
     double minDistance = numeric_limits<double>::max();
     int bestMatch = 0;
     for (int i = 0; i < numberOfPoses; i++) {
+        if (poseRecognizers[i] == NULL) {
+            continue;
+        }
         double distance;
         double label = poseRecognizers[i]->labelise(face, distance);
         if (distance < minDistance) {

@@ -210,6 +210,10 @@ double EigenRecognizerNorm::labelise(Mat& image) {
 }
 
 double EigenRecognizerNorm::labelise(Mat& image, double& distance){
+    // Convert the image to double components if needed
+    if (image.type() != CV_64F) {
+        image.convertTo(image, CV_64F);
+    }
     Mat projection = project(image.reshape(1, 1),base);
     int nearestIndex = 0;
     double smallestnorm = numeric_limits<double>::max();

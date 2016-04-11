@@ -19,7 +19,12 @@ using namespace std;
 Mat crop(Mat image, int centerX, int centerY) {
     Mat cropped = Mat::zeros(100, 100, CV_8U);
     Mat face = image(Range(max(centerY - 50, 0), min(centerY + 50, image.rows)), Range(max(centerX - 50, 0), min(centerX + 50, image.cols)));
-    face.copyTo(cropped);
+    for (int row = 0; row < face.rows; row++) {
+        for (int col = 0; col < face.cols; col++) {
+            cropped.at<uchar>(row, col) = face.at<uchar>(row, col);
+        }
+    }
+    assert (cropped.rows == 100 && cropped.cols == 100);
     return cropped;
 }
 
