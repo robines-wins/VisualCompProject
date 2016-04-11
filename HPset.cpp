@@ -114,6 +114,30 @@ void HPset::getPoseSet(int tilt, int pan, vector<Mat>& set) {
     }
 }
 
+void HPset::getCoarsePoseSet(vector<int> tiltClasses, vector<int> panClasses, int tiltIndex, int panIndex, vector<Mat>& set) {
+    vector<int> closeTilts, closePans;
+    // Find all the tilts closest to the coarse one
+    for (size_t i = 0; i < HP_TILT_COUNT; i++) {
+        int tilt = i * 15 - 30;
+        if (getClosestCoarse(tiltClasses, tilt) == tiltIndex) {
+            closeTilts.push_back(tilt);
+        }
+    }
+    // Find all the pans closest to the coarse one
+    for (size_t i = 0; i < HP_PAN_COUNT; i++) {
+        int pan = i * 15 - 90;
+        if (getClosestCoarse(panClasses, pan) == panIndex) {
+            closePans.push_back(pan);
+        }
+    }
+    // Get all poses for the found close tilt and close pan combinations
+    for (size_t i = 0; i < closeTilts.size(); i++) {
+        for (size_t j = 0; j < closePans.size(); j++) {
+            getPoseSet(closeTilts[i], closePans[j], set);
+        }
+    }
+}
+
 Mat HPset::getAllImage(int personId, int serie) {
     // Create an image of that can contain all images, ordered by tilt and pan
     Mat all = Mat::zeros(HP_TILT_COUNT * HP_IMG_SIZE, HP_PAN_COUNT * HP_IMG_SIZE, CV_8U);

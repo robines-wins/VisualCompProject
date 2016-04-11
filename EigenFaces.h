@@ -33,6 +33,7 @@ vector<int> randomIndexes(int size);
 
 class EigenRecognizer{
 public:
+    virtual ~EigenRecognizer() {}
     virtual void train(vector<Mat>& images, vector<double>& labels) =0;
     virtual double labelise(Mat& image) =0;
 };
@@ -45,9 +46,10 @@ private:
     int noc;
 public:
     EigenRecognizerNorm(int numOfComp){noc = numOfComp;}
+    ~EigenRecognizerNorm() {}
     void train(vector<Mat>& images, vector<double>& labels);
     double labelise(Mat& image);
-
+    double labelise(Mat& image, double& distance);
 };
 
 class EigenRecognizerProb : public EigenRecognizer{
@@ -56,6 +58,7 @@ private:
     CvNormalBayesClassifier NGC;
 public:
     EigenRecognizerProb(int numOfComp){noc = numOfComp; NGC = CvNormalBayesClassifier();}
+    ~EigenRecognizerProb() {}
     void train(vector<Mat>& images, vector<double>& labels);
     double labelise(Mat& image);
 };

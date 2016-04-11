@@ -189,10 +189,15 @@ void EigenRecognizerNorm::train(vector<Mat>& images, vector<double>& labels){
     Mat data = imagesToPcaMatrix(images);
     base = computeEigenBase(data, noc);
     trained = project(data, base);
-    labels = labels;
+    this->labels = labels;
 }
 
-double EigenRecognizerNorm::labelise(Mat& image){
+double EigenRecognizerNorm::labelise(Mat& image) {
+    double ignored;
+    return labelise(image, ignored);
+}
+
+double EigenRecognizerNorm::labelise(Mat& image, double& distance){
     Mat projection = project(image.reshape(1, 1),base);
     int nearestIndex = 0;
     double smallestnorm = numeric_limits<double>::max();
@@ -204,7 +209,7 @@ double EigenRecognizerNorm::labelise(Mat& image){
             nearestIndex = i;
         }
     }
-
+    distance = smallestnorm;
     return labels[nearestIndex];
 }
 
@@ -220,5 +225,4 @@ void EigenRecognizerProb::train(vector<Mat>& images, vector<double>& labels){
 
 double EigenRecognizerProb::labelise(Mat& image){
     return NGC.predict(image.reshape(image.channels(), 1));
-
 }

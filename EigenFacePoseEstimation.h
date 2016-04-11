@@ -8,9 +8,16 @@ using namespace std;
 
 class EigenFacePoseEstimator {
 private:
-    vector<EigenRecognizer> poseRecognizers;
+    int numberOfPoses;
+    int numberOfComponents;
+    vector<EigenRecognizerNorm*> poseRecognizers;
 public:
-    int trainPose(vector<Mat>& faces);
+    EigenFacePoseEstimator(int numberOfPoses, int numberOfComponents) :
+            numberOfPoses(numberOfPoses), numberOfComponents(numberOfComponents) {
+                poseRecognizers.resize(numberOfPoses, NULL);
+            }
+    ~EigenFacePoseEstimator();
+    void trainPose(int id, vector<Mat>& faces);
     int estimatePose(Mat face);
 };
 

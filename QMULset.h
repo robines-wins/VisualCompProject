@@ -31,7 +31,6 @@ public:
     Mat getAllImage(string subjectName);
 
     Mat getAllImage(int subjectIndex);
-
 };
 
 #endif /* QMULset_h */

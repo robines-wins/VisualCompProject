@@ -17,7 +17,12 @@ public:
 
     void getPoseSet(int tilt, int pan, vector<Mat>& set);
 
+    void getCoarsePoseSet(vector<int> tiltClasses, vector<int> panClasses, int tiltIndex, int panIndex, vector<Mat>& set);
+
     Mat getAllImage(int personId, int serie);
 };
+
+// Implemented in QMULset
+size_t getClosestCoarse(vector<int> classes, int value);
 
 #endif /* HPset_h */

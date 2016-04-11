@@ -5,7 +5,7 @@
 #include "main.h"
 #include "QMULset.h"
 #include "HPset.h"
-#include "EigenFaces.h"
+#include "answer.h"
 
 using namespace cv;
 using namespace std;
@@ -23,22 +23,15 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
 
+    QMULset QMUL = QMULset(string(qmul));
+    HPset HP = HPset(string(hp));
+
     int coarseTilts[] = {-25, 0, 25};
     int coarsePans[] = {-90, -60, -30, 0, 30, 60, 90};
     vector<int> tiltClasses(begin(coarseTilts), end(coarseTilts));
     vector<int> panClasses(begin(coarsePans), end(coarsePans));
 
-    QMULset QMUL = QMULset(string(qmul));
-
-    vector<Mat> coarsePoses;
-    QMUL.getCoarsePoseSet(tiltClasses, panClasses, 0, 4, coarsePoses);
-
-    /*imshow("QMUL 0", QMUL.getAllImage(0));
-    waitKey();
-
-    HPset HP = HPset(string(hp));
-    imshow("HP 0", HP.getAllImage(1, 1));
-    waitKey();*/
+    answerQ16_1(QMUL, HP, tiltClasses, panClasses);
 
     return 0;
 }
