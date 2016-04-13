@@ -2,7 +2,7 @@
 #include "answer.h"
 #include <opencv2/opencv.hpp>
 #include "EigenFaces.h"
-#include "EigenFacePoseEstimation.h"
+//#include "EigenFacePoseEstimation.h"
 
 #define PATH_FOR_OUTPUT "/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/"
 
@@ -70,7 +70,7 @@ void answerQ5(vector<Mat> set, int optimalfromQ3){
         }
     }
 }
-
+/*
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {
     size_t numberPoses = tiltClasses.size() * panClasses.size();
     Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32SC1);
@@ -100,4 +100,4 @@ void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> pa
     }
     // Print the confusion matrix
     cout << confusion << endl;
-}
+}*/

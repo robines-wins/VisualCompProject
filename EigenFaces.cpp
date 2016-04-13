@@ -36,6 +36,7 @@ Mat backproject(const Mat& vectors, const Mat& base){
 
 Mat computeEigenBase(Mat& data, int numOfComp){
     Mat mean, EValues, EVector, covar;
+    
     calcCovarMatrix(data, covar, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
     eigen(covar, EValues, EVector);
 
