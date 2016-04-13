@@ -15,14 +15,14 @@ void answerQ3(vector<Mat> set){
         cout<< numC[i] <<endl;
     }
     cout <<endl;
+    cout << "k validation for reconstruction of training images" <<endl << endl;
     for (int i = 0; i< 13; i++) {
-        cout << "k validation for reconstruction of training images" <<endl << endl;
         cout << kFoldCrossValidationReconstruction(set, numC[i],7,false)<<endl;
     }
     cout <<endl;
+    cout << "k validation for reconstruction of testing images" <<endl << endl;
     for (int i = 0; i< 13; i++) {
-        cout << "k validation for reconstruction of testing images" <<endl << endl;
-        cout << numC[i] <<" " << kFoldCrossValidationReconstruction(set, numC[i]) <<endl;
+        cout << kFoldCrossValidationReconstruction(set, numC[i]) <<endl;
     }
 }
 
@@ -42,7 +42,6 @@ void answerQ4(vector<Mat> set){
     for (int i = 0; i<10; i++) {
         Mat toOutput;
         base.row(i).reshape(1, 100).convertTo(toOutput, CV_8U);
-        cout << "plop" + to_string(i)<<endl;
         imwrite(path + "Evector" +to_string(i)+".bmp", toOutput);
     }
 
@@ -69,6 +68,52 @@ void answerQ5(vector<Mat> set, int optimalfromQ3){
             imwrite(path + "random" +to_string(j)+ "_reconstruct_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
         }
     }
+}
+
+void answerQ6(QMULset QMUL){
+    
+    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,100*100};
+    
+    vector<Mat> S1,S2,S3, set;
+    QMUL.getPersonSet(1, S1);
+    QMUL.getPersonSet(1, S2);
+    QMUL.getPersonSet(1, S3);
+    
+    set = S1;
+    set.insert(set.end(), S2.begin(),S2.end());
+    set.insert(set.end(), S3.begin(),S3.end());
+    
+    vector<double> labels;
+    for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
+    for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
+    for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
+    
+    for (int i = 0; i<13; i++) {
+        EigenRecognizerNorm ER(numC[i]);
+        cout << kFoldCrossValidationRecognition(ER, set, labels, 7) << endl ;
+    }
+    
+    
+}
+
+void answerQ8(QMULset QMUL, int optiNOC){
+    vector<Mat> S1,S2,S3, set;
+    QMUL.getPersonSet(1, S1);
+    QMUL.getPersonSet(1, S2);
+    QMUL.getPersonSet(1, S3);
+    
+    set = S1;
+    set.insert(set.end(), S2.begin(),S2.end());
+    set.insert(set.end(), S3.begin(),S3.end());
+    
+    vector<double> labels;
+    for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
+    for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
+    for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
+    
+    EigenRecognizerProb ER(optiNOC);
+    cout << kFoldCrossValidationRecognition(ER, set, labels, 7) << endl;
+    
 }
 /*
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {

@@ -37,15 +37,26 @@ Mat backproject(const Mat& vectors, const Mat& base){
 Mat computeEigenBase(Mat& data, int numOfComp){
     Mat mean, EValues, EVector, covar;
     
-    calcCovarMatrix(data, covar, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
+    calcCovarMatrix(data, covar, mean, CV_COVAR_SCRAMBLED| CV_COVAR_ROWS);
     eigen(covar, EValues, EVector);
+    
+    
+    Mat tmp_data, tmp_mean = repeat(mean, data.rows/mean.rows, data.cols/mean.cols);
+    tmp_data = data-tmp_mean;
+    
+    Mat base(numOfComp,data.cols,data.type());
+    Mat trueEVector;
+    gemm(EVector, data, 1, noArray(), 0, trueEVector);
 
-    //if (inri) {outputEVectors(EVector);}
-
-    Mat base;
-    transpose(EVector.colRange(0, numOfComp), base); //transpose matrix eigenvector to get back to row vector and selecting only the number we want
-    base.convertTo(base, data.type()); //make sure type of base and vector are the same
-
+    for (int i=0; i<numOfComp; i++) {
+        //cout << trueEVector.row(i) <<endl;
+        normalize(trueEVector.row(i), base.row(i));
+        //trueEVector.row(i) = base.row(i);
+        //cout << base.row(i) <<endl;
+    }
+    
+    assert(base.rows == numOfComp);
+    assert(base.cols == data.cols);
     return base;
 }
 
@@ -214,16 +225,45 @@ double EigenRecognizerNorm::labelise(Mat& image, double& distance){
     return labels[nearestIndex];
 }
 
-void EigenRecognizerProb::train(vector<Mat>& images, vector<double>& labels){
-    Mat dataM = imagesToPcaMatrix(images);
-    Mat labelM = Mat(labels.size(), 1, CV_64F);
-    for (int i=0; i<labels.size(); i++) {
-        labelM.at<double>(i, 0) = labels[i];
-    }
+normalGaussian::normalGaussian(Mat& data){
+    calcCovarMatrix(data, covar, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
+    covar.mul(Mat::eye(covar.size(), covar.type()));
+    det = determinant(covar);
+    invert(covar, covar);
+}
 
-    NGC.train(dataM, labelM);
+void EigenRecognizerProb::train(vector<Mat>& images, vector<double>& labels){
+    NGC = map<double,normalGaussian>();
+    map<double,vector<Mat>> imageLabelmap;
+    for (int i =0; i<images.size(); i++) {
+        imageLabelmap[labels[i]].push_back(images[i]);
+    }
+    for(auto it : imageLabelmap){
+        Mat temp = imagesToPcaMatrix(it.second);
+        NGC[it.first] = normalGaussian(temp);
+    }
 }
 
 double EigenRecognizerProb::labelise(Mat& image){
-    return NGC.predict(image.reshape(image.channels(), 1));
+    double maxprob = -1, maxlabel = -1;
+    for (auto it : NGC) {
+        double prob = it.second.probOf(image);
+        if (prob > maxprob) {
+            maxprob = prob;
+            maxlabel = it.first;
+        }
+    }
+    
+    return maxlabel;
+}
+
+
+
+double normalGaussian::probOf(Mat& vector){
+    assert(vector.rows == 1);
+    Mat normalized = vector - mean;
+    Mat exponentM = normalized*covar*normalized.t();
+    double expon = -0.5*exponentM.at<double>(0, 0);
+    double result = exp(expon);
+    return (1/pow((2*3.14159265358979323846*det), 2.0/(double)vector.cols))*result;
 }

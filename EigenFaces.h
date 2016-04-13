@@ -46,22 +46,32 @@ private:
     int noc;
 public:
     EigenRecognizerNorm(int numOfComp){noc = numOfComp;}
-    ~EigenRecognizerNorm() {}
     void train(vector<Mat>& images, vector<double>& labels);
     double labelise(Mat& image);
     double labelise(Mat& image, double& distance);
 };
 
+class normalGaussian{
+private:
+    Mat mean;
+    Mat covar;
+    double det;
+public:
+    normalGaussian(Mat& data);
+    double probOf(Mat& vector);
+};
+
 class EigenRecognizerProb : public EigenRecognizer{
 private:
     int noc;
-    CvNormalBayesClassifier NGC;
+    map<double,normalGaussian> NGC;
 public:
-    EigenRecognizerProb(int numOfComp){noc = numOfComp; NGC = CvNormalBayesClassifier();}
-    ~EigenRecognizerProb() {}
-    void train(vector<Mat>& images, vector<double>& labels);
+    EigenRecognizerProb(int numOfComp){noc = numOfComp;}
+    void train(std::vector<Mat>& images, std::vector<double>& labels);
     double labelise(Mat& image);
 };
+
+
 
 double recognitionRate(EigenRecognizer& ER, vector<Mat>& testImages, vector<double>& labels);
 
