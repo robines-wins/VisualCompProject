@@ -36,14 +36,14 @@ Mat backproject(const Mat& vectors, const Mat& base){
 
 Mat computeEigenBase(Mat& data, int numOfComp){
     Mat mean, EValues, EVector, covar;
-    
+
     calcCovarMatrix(data, covar, mean, CV_COVAR_SCRAMBLED| CV_COVAR_ROWS);
     eigen(covar, EValues, EVector);
-    
-    
+
+
     Mat tmp_data, tmp_mean = repeat(mean, data.rows/mean.rows, data.cols/mean.cols);
     tmp_data = data-tmp_mean;
-    
+
     Mat base(numOfComp,data.cols,data.type());
     Mat trueEVector;
     gemm(EVector, data, 1, noArray(), 0, trueEVector);
@@ -54,7 +54,7 @@ Mat computeEigenBase(Mat& data, int numOfComp){
         //trueEVector.row(i) = base.row(i);
         //cout << base.row(i) <<endl;
     }
-    
+
     assert(base.rows == numOfComp);
     assert(base.cols == data.cols);
     return base;
@@ -244,7 +244,7 @@ void EigenRecognizerProb::train(vector<Mat>& images, vector<double>& labels){
     }
     for(auto it : imageLabelmap){
         Mat temp = imagesToPcaMatrix(it.second);
-        NGC[it.first] = normalGaussian(temp);
+        NGC.insert(pair<double, normalGaussian>(it.first, normalGaussian(temp)));
     }
 }
 
@@ -257,7 +257,7 @@ double EigenRecognizerProb::labelise(Mat& image){
             maxlabel = it.first;
         }
     }
-    
+
     return maxlabel;
 }
 

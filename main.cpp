@@ -31,7 +31,7 @@ int main(int argc, const char * argv[]) {
     vector<int> tiltClasses(begin(coarseTilts), end(coarseTilts));
     vector<int> panClasses(begin(coarsePans), end(coarsePans));
 
-    //answerQ16_1(QMUL, HP, tiltClasses, panClasses);
+    answerQ16_1(QMUL, HP, tiltClasses, panClasses);
 
     return 0;
 }

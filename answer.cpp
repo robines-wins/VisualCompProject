@@ -2,7 +2,7 @@
 #include "answer.h"
 #include <opencv2/opencv.hpp>
 #include "EigenFaces.h"
-//#include "EigenFacePoseEstimation.h"
+#include "EigenFacePoseEstimation.h"
 
 #define PATH_FOR_OUTPUT "/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/"
 
@@ -71,29 +71,29 @@ void answerQ5(vector<Mat> set, int optimalfromQ3){
 }
 
 void answerQ6(QMULset QMUL){
-    
+
     int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,100*100};
-    
+
     vector<Mat> S1,S2,S3, set;
     QMUL.getPersonSet(1, S1);
     QMUL.getPersonSet(1, S2);
     QMUL.getPersonSet(1, S3);
-    
+
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());
     set.insert(set.end(), S3.begin(),S3.end());
-    
+
     vector<double> labels;
     for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
     for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
     for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
-    
+
     for (int i = 0; i<13; i++) {
         EigenRecognizerNorm ER(numC[i]);
         cout << kFoldCrossValidationRecognition(ER, set, labels, 7) << endl ;
     }
-    
-    
+
+
 }
 
 void answerQ8(QMULset QMUL, int optiNOC){
@@ -101,50 +101,56 @@ void answerQ8(QMULset QMUL, int optiNOC){
     QMUL.getPersonSet(1, S1);
     QMUL.getPersonSet(1, S2);
     QMUL.getPersonSet(1, S3);
-    
+
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());
     set.insert(set.end(), S3.begin(),S3.end());
-    
+
     vector<double> labels;
     for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
     for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
     for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
-    
+
     EigenRecognizerProb ER(optiNOC);
     cout << kFoldCrossValidationRecognition(ER, set, labels, 7) << endl;
-    
+
 }
-/*
+
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {
-    size_t numberPoses = tiltClasses.size() * panClasses.size();
+    //size_t numOfTiltClasses = tiltClasses.size();
+    //size_t numOfPanClasses = panClasses.size();
+    size_t numOfTiltClasses = 1;
+    size_t numOfPanClasses = 2;
+    size_t numberPoses = numOfTiltClasses * numOfPanClasses;
     Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32F);
     // Train the estimator for each pose use QMUL
-    EigenFacePoseEstimator estimator(numberPoses, 100);
-    for (size_t i = 0; i < tiltClasses.size(); i++) {
-        for (size_t j = 0; j < panClasses.size(); j++) {
+    EigenFacePoseEstimator estimator(numberPoses, 3000);
+    for (size_t i = 0; i < numOfTiltClasses; i++) {
+        for (size_t j = 0; j < numOfPanClasses; j++) {
             vector<Mat> coarsePoses;
             qmul.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
-            size_t index = i * panClasses.size() + j;
+            size_t index = i * numOfPanClasses + j;
             estimator.trainPose(index, coarsePoses);
             cout << "Trained pose " << index << " with tilt = " << tiltClasses[i] << " and pan = " << panClasses[j] << endl;
         }
     }
     // Estimate the poses from HP using the trained estimator
-    for (size_t i = 0; i < tiltClasses.size(); i++) {
-        for (size_t j = 0; j < panClasses.size(); j++) {
+    for (size_t i = 0; i < numOfTiltClasses; i++) {
+        for (size_t j = 0; j < numOfPanClasses; j++) {
             vector<Mat> coarsePoses;
             hp.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
-            size_t index = i * panClasses.size() + j;
+            size_t index = i * numOfPanClasses + j;
             for (size_t k = 0; k < coarsePoses.size(); k++) {
                 size_t guess = estimator.estimatePose(coarsePoses[k]);
                 confusion.at<float>(index, guess)++;
                 cout << "Estimated pose " << index << " as " << guess << endl;
             }
+            // Normalize the confusion column
+            //for (int col = 0; col < numberPoses; col++) {
+            //    confusion.at<float>(index, col) /= coarsePoses.size();
+            //}
         }
     }
-    // Normalize the confustion matrix
-    confusion /= numberPoses;
     // Print the confusion matrix
     cout << confusion << endl;
-}*/
+}
