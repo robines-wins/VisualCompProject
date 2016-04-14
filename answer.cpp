@@ -117,14 +117,12 @@ void answerQ8(QMULset QMUL, int optiNOC){
 }
 
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {
-    //size_t numOfTiltClasses = tiltClasses.size();
-    //size_t numOfPanClasses = panClasses.size();
-    size_t numOfTiltClasses = 1;
-    size_t numOfPanClasses = 2;
+    size_t numOfTiltClasses = tiltClasses.size();
+    size_t numOfPanClasses = panClasses.size();
     size_t numberPoses = numOfTiltClasses * numOfPanClasses;
     Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32F);
     // Train the estimator for each pose use QMUL
-    EigenFacePoseEstimator estimator(numberPoses, 3000);
+    EigenFacePoseEstimator estimator(numberPoses, 30);
     for (size_t i = 0; i < numOfTiltClasses; i++) {
         for (size_t j = 0; j < numOfPanClasses; j++) {
             vector<Mat> coarsePoses;
@@ -145,12 +143,22 @@ void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> pa
                 confusion.at<float>(index, guess)++;
                 cout << "Estimated pose " << index << " as " << guess << endl;
             }
-            // Normalize the confusion column
-            //for (int col = 0; col < numberPoses; col++) {
-            //    confusion.at<float>(index, col) /= coarsePoses.size();
-            //}
+            // Normalize the confusion row
+            for (int col = 0; col < numberPoses; col++) {
+                confusion.at<float>(index, col) /= coarsePoses.size();
+            }
         }
     }
-    // Print the confusion matrix
-    cout << confusion << endl;
+    // Pretty print the confusion matrix with fixed precision
+    cout.setf(ios::fixed, ios::floatfield);
+    cout.precision(2);
+    cout << "[" << endl;
+    for (size_t row = 0; row < numberPoses; row++) {
+        cout << "    ";
+        for (size_t col = 0; col < numberPoses; col++) {
+            cout << confusion.at<float>(row, col) << "  ";
+        }
+        cout << endl;
+    }
+    cout << "]" << endl;
 }
