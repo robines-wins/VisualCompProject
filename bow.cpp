@@ -1,13 +1,49 @@
 #include <string>
+#include <algorithm>
+#include <ctime>
+#include <stdlib.h>
 #include "bow.h"
 
 #define DISPLAY 0
 #define PEOPLE 31
 #define PICTURES_PER_PERSON 133
 #define TESTING 5
+#define K 7
+
+/* k = 7 */
+void kFoldsCrossValidation(QMULset Dataset, const int numCodewords) {
+    // randomly shuffle the input data set
+    srand(time(0));
+    vector< vector<Mat> > people_set((PEOPLE));
+    for (unsigned int it = 0; it < PEOPLE; it++) {
+        Dataset.getPersonSet(it, people_set[it]);
+        random_shuffle(people_set[it].begin(), people_set[it].end());
+    }
+
+    // validate for k = 7 fold
+    int partition = PICTURES_PER_PERSON / K;
+    double avg_recognition = 0;
+    for (unsigned int it = 0; it < K; it++) {
+        Mat codeBook;
+        vector<vector<Mat>> imageDescriptors;
+        int partitionStart = it * partition;
+        TrainBoW(people_set, codeBook, imageDescriptors, numCodewords, partitionStart, partition);
+        double recognition;
+        TestBoW(people_set, codeBook, imageDescriptors, partitionStart, partition, recognition);
+        avg_recognition += recognition;
+    }
+    avg_recognition /= K;
+
+    cout << numCodewords << ": " << avg_recognition * 100 << "%" << endl;
+}
 
 /* Train BoW */
-void TrainBoW(QMULset Dataset, Mat &codeBook, vector<vector<Mat>> &imageDescriptors, const int numCodewords)
+void TrainBoW(vector< vector<Mat> > people_set,
+              Mat &codeBook,
+              vector<vector<Mat>> &imageDescriptors,
+              const int numCodewords,
+              const int partitionStart,
+              const int partitionSize)
 {
     // Create a SIFT feature detector object
     Ptr<FeatureDetector> featureDetector = FeatureDetector::create("SIFT");
@@ -19,12 +55,15 @@ void TrainBoW(QMULset Dataset, Mat &codeBook, vector<vector<Mat>> &imageDescript
     Mat D;
 
     // loop for each person
-    for (unsigned int i = 0; i < PEOPLE; i++) {
-        vector<Mat> set;
-        Dataset.getPersonSet(i, set);
-        // each image of each category
-        for (unsigned int j = 0; j < set.size()-TESTING; j++) {
-            Mat I = set[j];
+    for (unsigned int i = 0; i < people_set.size(); i++) {
+        // each image of each category in a partition
+        for (unsigned int j = (partitionStart == 0) ? partitionSize : 0; j < people_set[i].size(); j++) {
+            if (j == partitionStart) {
+                j += partitionSize-1;
+                continue;
+            }
+
+            Mat I = people_set[i][j];
 
             // detect key points
             vector<KeyPoint> keyPoints;
@@ -67,16 +106,17 @@ void TrainBoW(QMULset Dataset, Mat &codeBook, vector<vector<Mat>> &imageDescript
     bowDExtractor->setVocabulary(codeBook);
 
     // loop for each category
-    for (unsigned int i = 0; i < PEOPLE; i++) {
+    for (unsigned int i = 0; i < people_set.size(); i++) {
         // each image of each category
         vector<Mat> category_descriptors;
-        Mat average_mat = Mat::zeros(1, numCodewords, CV_32F);
 
-        vector<Mat> set;
-        Dataset.getPersonSet(i, set);
+        for (unsigned int j = (partitionStart == 0) ? partitionSize : 0; j < people_set[i].size()-TESTING; j++) {
+            if (j == partitionStart) {
+                j += partitionSize-1;
+                continue;
+            }
 
-        for (unsigned int j = 0; j < set.size()-TESTING; j++) {
-            Mat I = set[j];
+            Mat I = people_set[i][j];
 
             // detect key points
             vector<KeyPoint> keyPoints;
@@ -86,17 +126,18 @@ void TrainBoW(QMULset Dataset, Mat &codeBook, vector<vector<Mat>> &imageDescript
             Mat histogram;
             bowDExtractor->compute2(I, keyPoints, histogram);
             category_descriptors.push_back(histogram);
-
-            average_mat += histogram;
         }
         imageDescriptors.push_back(category_descriptors);
-
-        average_mat = average_mat / set.size();
     }
 }
 
 /* Test BoW */
-void TestBoW(QMULset Dataset, const Mat codeBook, const vector<vector<Mat>> imageDescriptors)
+void TestBoW(vector< vector<Mat> > people_set,
+             const Mat codeBook,
+             const vector<vector<Mat>> imageDescriptors,
+             const int partitionStart,
+             const int partitionSize,
+             double &recognition)
 {
     // Create a SIFT feature detector object
     Ptr<FeatureDetector> featureDetector = FeatureDetector::create("SIFT");
@@ -113,13 +154,10 @@ void TestBoW(QMULset Dataset, const Mat codeBook, const vector<vector<Mat>> imag
     int numCorrect = 0;
 
     // loop for each category
-    for (unsigned int i = 0; i < PEOPLE; i++) {
-        vector<Mat> set;
-        Dataset.getPersonSet(i, set);
-
+    for (unsigned int i = 0; i < people_set.size(); i++) {
         // each image of each category
-        for (unsigned int j = set.size() - TESTING; j < set.size(); j++) {
-            Mat I = set[j];
+        for (unsigned int j = partitionStart; j < partitionStart+partitionSize; j++) {
+            Mat I = people_set[i][j];
 
             // detect key points
             vector<KeyPoint> keyPoints;
@@ -152,7 +190,7 @@ void TestBoW(QMULset Dataset, const Mat codeBook, const vector<vector<Mat>> imag
         }
     }
 
-    double ratio = double(numCorrect) / double(PEOPLE * TESTING);
-    cout << ratio * 100 << "% recognition" << endl;
+    recognition = double(numCorrect) / double(PEOPLE * TESTING);
+//    cout << ratio * 100 << "% recognition" << endl;
 }
 
