@@ -2,12 +2,13 @@
 #include <algorithm>
 #include <ctime>
 #include <stdlib.h>
+#include <iostream>
+#include <fstream>
 #include "bow.h"
 
 #define DISPLAY 0
 #define PEOPLE 31
 #define PICTURES_PER_PERSON 133
-#define TESTING 5
 #define K 7
 
 /* k = 7 */
@@ -114,7 +115,7 @@ void TrainBoW(vector< vector<Mat> > people_set,
 
         for (unsigned int j = (partitionStart == 0) ? partitionSize : 0; j < people_set[i].size(); j++) {
             if (j == partitionStart) {
-                j += partitionSize-1;
+                j += partitionSize;
                 continue;
             }
 
@@ -155,6 +156,13 @@ void TestBoW(vector< vector<Mat> > people_set,
 
     int numCorrect = 0;
 
+#if DISPLAY
+    ofstream writefile;
+    writefile.open("histograms.txt");
+    int correct = 0;
+    int incorrect = 0;
+#endif
+
     // loop for each category
     for (unsigned int i = 0; i < people_set.size(); i++) {
         // each image of each category
@@ -171,7 +179,8 @@ void TestBoW(vector< vector<Mat> > people_set,
 
             // compare and find the best matching histogram
             double best_dist = numeric_limits<double>::max();
-            unsigned int best_m = 0;
+            unsigned int best_m = -1;
+            unsigned int best_n = -1;
             for (unsigned int m = 0; m < imageDescriptors.size(); m++) {
                 for (unsigned int n = 0; n < imageDescriptors[m].size(); n++) {
                     // use chi square distance to compare histograms
@@ -183,12 +192,41 @@ void TestBoW(vector< vector<Mat> > people_set,
                     if (dist < best_dist) {
                         best_dist = dist;
                         best_m = m;
+                        best_n = n;
                     }
                 }
             }
 
             // assign the category index
-            if (best_m == i) numCorrect++;
+            if (best_m == i) {
+                numCorrect++;
+#if DISPLAY
+                if (correct < 2) {
+                    writefile << "correct" << endl;
+                    writefile << imageDescriptors[best_m][best_n] << endl;
+                    writefile << "\n=========================\n" << endl;
+                    correct++;
+
+                    writefile << "histogram" << endl;
+                    writefile << histogram << endl;
+                    writefile << "\n========================\n" << endl;
+                }
+#endif
+            }
+#if DISPLAY
+            else {
+                if (incorrect < 2) {
+                    writefile << "incorrect" << endl;
+                    writefile << imageDescriptors[best_m][best_n] << endl;
+                    writefile << "\n=========================\n" << endl;
+                    incorrect++;
+
+                    writefile << "histogram" << endl;
+                    writefile << histogram << endl;
+                    writefile << "\n========================\n" << endl;
+                }
+            }
+#endif
         }
     }
 
@@ -269,7 +307,7 @@ void TestBoWProb(vector< vector<Mat> > people_set,
                 histogram.convertTo(histogram, mean_vector[it].type());
                 Mat diff_vector = histogram - mean_vector[it];
                 Mat variance = diff_vector * covar[it].inv() * diff_vector.t();
-                double likelihood = exp(-0.5 * sum(variance)[0]) / (pow(2 * pi, dimension / 2) * sqrt(norm(covar[it])));
+                double likelihood = exp(-0.5 * sum(variance)[0]) / (pow(2 * pi, dimension / 2) * determinant(covar[it]));
                 if (likelihood > mle) {
                     mle = likelihood;
                     best_match = it;
@@ -278,5 +316,5 @@ void TestBoWProb(vector< vector<Mat> > people_set,
             if (best_match == i) numCorrect++;
         }
     }
-    recognition = numCorrect / (people_set.size() * partitionSize);
+    recognition = (double)numCorrect / (double)(people_set.size() * partitionSize);
 }
