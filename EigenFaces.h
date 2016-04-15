@@ -54,7 +54,7 @@ public:
 class normalGaussian{
 private:
     Mat mean;
-    Mat covar;
+    Mat covarDiag;
     double det;
 public:
     normalGaussian(Mat& data);

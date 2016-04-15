@@ -8,6 +8,7 @@ using namespace std;
 
 
 
+
 Mat imagesToPcaMatrix(vector<Mat> imgSet){
     Mat dataM = Mat(0, imgSet.front().rows*imgSet.front().cols, imgSet.front().type());
     for (auto it = imgSet.begin(); it != imgSet.end(); it++) {
@@ -36,7 +37,6 @@ Mat backproject(const Mat& vectors, const Mat& base){
 
 Mat computeEigenBase(Mat& data, int numOfComp){
     Mat mean, EValues, EVector, covar;
-
     calcCovarMatrix(data, covar, mean, CV_COVAR_SCRAMBLED| CV_COVAR_ROWS);
     eigen(covar, EValues, EVector);
 
@@ -233,10 +233,20 @@ double EigenRecognizerNorm::labelise(Mat& image, double& distance){
 }
 
 normalGaussian::normalGaussian(Mat& data){
+    Mat covar;
     calcCovarMatrix(data, covar, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS);
-    covar.mul(Mat::eye(covar.size(), covar.type()));
-    det = determinant(covar);
-    invert(covar, covar);
+    //transpose(covar.diag(), covarDiag);
+    covarDiag = covar.diag();
+    assert(covarDiag.cols == 1);
+    
+    det = 1;
+    for (int i=0; i<covarDiag.cols; i++) {
+        det *= covarDiag.at<double>(i,0);
+    }
+    
+    divide(Mat::ones(covarDiag.size(), covarDiag.type()), covarDiag, covarDiag);
+    
+    
 }
 
 void EigenRecognizerProb::train(vector<Mat>& images, vector<double>& labels){
@@ -254,7 +264,9 @@ void EigenRecognizerProb::train(vector<Mat>& images, vector<double>& labels){
 double EigenRecognizerProb::labelise(Mat& image){
     double maxprob = -1, maxlabel = -1;
     for (auto it : NGC) {
-        double prob = it.second.probOf(image);
+        Mat vector = image.reshape(1, 1);
+        vector.convertTo(vector, CV_64F);
+        double prob = it.second.probOf(vector);
         if (prob > maxprob) {
             maxprob = prob;
             maxlabel = it.first;
@@ -269,7 +281,9 @@ double EigenRecognizerProb::labelise(Mat& image){
 double normalGaussian::probOf(Mat& vector){
     assert(vector.rows == 1);
     Mat normalized = vector - mean;
-    Mat exponentM = normalized*covar*normalized.t();
+    Mat exponentM;
+    multiply(covarDiag, normalized.t(), exponentM);
+    exponentM = normalized*exponentM;
     double expon = -0.5*exponentM.at<double>(0, 0);
     double result = exp(expon);
     return (1/pow((2*3.14159265358979323846*det), 2.0/(double)vector.cols))*result;

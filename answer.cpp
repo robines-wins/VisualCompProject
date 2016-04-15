@@ -11,17 +11,17 @@ using namespace std;
 
 void answerQ3(vector<Mat> set){
     int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,static_cast<int>(set.size())};
-    for (int i = 0; i<13; i++) {
+    for (int i = 0; i<13 && (numC[i]<=static_cast<int>(set.size()*6)/7); i++) {
         cout<< numC[i] <<endl;
     }
     cout <<endl;
     cout << "k validation for reconstruction of training images" <<endl << endl;
-    for (int i = 0; i< 13; i++) {
+    for (int i = 0; i<13 && (numC[i]<=static_cast<int>(set.size()*6)/7); i++) {
         cout << kFoldCrossValidationReconstruction(set, numC[i],7,false)<<endl;
     }
     cout <<endl;
     cout << "k validation for reconstruction of testing images" <<endl << endl;
-    for (int i = 0; i< 13; i++) {
+    for (int i = 0; i<13 && (numC[i]<=static_cast<int>(set.size()*6)/7); i++) {
         cout << kFoldCrossValidationReconstruction(set, numC[i]) <<endl;
     }
 }
@@ -36,14 +36,14 @@ void answerQ4(vector<Mat> set){
     reduce(train, mean, 0, CV_REDUCE_AVG);
     mean.reshape(1, 100).convertTo(mean, CV_8U);
     string path = PATH_FOR_OUTPUT;
-    imwrite(path + "means.bmp", mean);
+    imwrite(path + "means.png", mean);
 
     Mat base = computeEigenBase(train, 10);
     for (int i = 0; i<10; i++) {
         Mat toOutput;
         normalize(base.row(i), toOutput,0,255,NORM_MINMAX);
         toOutput.reshape(1, 100).convertTo(toOutput, CV_8U);
-        imwrite(path + "Evector" +to_string(i)+".bmp", toOutput);
+        imwrite(path + "Evector" +to_string(i)+".png", toOutput);
     }
 
 }
@@ -62,32 +62,37 @@ void answerQ5(vector<Mat> set, int optimalfromQ3){
             Mat toOutput = randImg[j].reshape(1, 100);
             toOutput.convertTo(toOutput, CV_8U);
             string path = PATH_FOR_OUTPUT;
-            imwrite(path + "random" +to_string(j)+ "_Original_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
+            imwrite(path + "random" +to_string(j)+ "_Original.png", toOutput);
 
-            toOutput = backproject(project(randImg[j], base), base).reshape(1, 100);
+            toOutput = backproject(project(randImg[j], base), base);
+            normalize(toOutput, toOutput,0,255,NORM_MINMAX);
+            toOutput = toOutput.reshape(1, 100);
             toOutput.convertTo(toOutput, CV_8U);
-            imwrite(path + "random" +to_string(j)+ "_reconstruct_" +to_string(numOfComp[i])+"vectors.bmp", toOutput);
+            imwrite(path + "random" +to_string(j)+ "_reconstruct_" +to_string(numOfComp[i])+"vectors.png", toOutput);
         }
     }
 }
 
 void answerQ6(QMULset QMUL){
 
-    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,3990};
+    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,4123};
 
-    vector<Mat> S1,S2,S3, set;
+    vector<Mat> S1,S2,S3,S4, set;
     QMUL.getPersonSet(1, S1);
     QMUL.getPersonSet(2, S2);
     QMUL.getPersonSet(3, S3);
+    QMUL.getPersonSet(4, S4);
 
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());
     set.insert(set.end(), S3.begin(),S3.end());
+    set.insert(set.end(), S4.begin(),S4.end());
 
     vector<double> labels;
     for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
     for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
     for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
+    for (int i = 0; i<S4.size(); i++) {labels.push_back(4);}
 
     for (int i = 0; i<13; i++) {
         EigenRecognizerNorm ER(numC[i]);
@@ -97,20 +102,77 @@ void answerQ6(QMULset QMUL){
 
 }
 
-void answerQ8(QMULset QMUL, int optiNOC){
-    vector<Mat> S1,S2,S3, set;
+void answerQ7(QMULset QMUL, int optiNOC){
+    EigenRecognizerNorm ER(optiNOC);
+    
+    vector<Mat> S1,S2,S3,S4, set;
     QMUL.getPersonSet(1, S1);
     QMUL.getPersonSet(2, S2);
     QMUL.getPersonSet(3, S3);
-
+    QMUL.getPersonSet(4, S4);
+    
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());
     set.insert(set.end(), S3.begin(),S3.end());
-
+    set.insert(set.end(), S4.begin(),S4.end());
+    
     vector<double> labels;
     for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
     for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
     for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
+    for (int i = 0; i<S4.size(); i++) {labels.push_back(4);}
+    
+    
+    vector<int> indexs = randomIndexes(set.size());
+    
+    int i = rand()/7;
+    
+    uint imgperfold = set.size()/7;
+        
+    vector<Mat> train,test;
+    vector<double> trainl,testl;
+        
+    for (int j=0; j<set.size(); j++) {
+        if (j>=i*imgperfold && j<(i+1)*imgperfold) {
+            test.push_back(set[indexs[j]]);
+            testl.push_back(labels[indexs[j]]);
+        }
+        else{
+            train.push_back(set[indexs[j]]);
+            trainl.push_back(labels[indexs[j]]);
+        }
+    }
+        
+    ER.train(train, trainl);
+    
+    int good = 0, bad =0;
+    string path = PATH_FOR_OUTPUT;
+    for (int j=0; j<test.size() && good<2 && bad<2; j++) {
+        if (testl[j] == ER.labelise(test[j])) {
+            good++;
+            imwrite(path + "goodLabelise_" + to_string(good) +".bmp" , testl[j]);
+        }
+    }
+    
+}
+
+void answerQ8(QMULset QMUL, int optiNOC){
+    vector<Mat> S1,S2,S3,S4, set;
+    QMUL.getPersonSet(1, S1);
+    QMUL.getPersonSet(2, S2);
+    QMUL.getPersonSet(3, S3);
+    QMUL.getPersonSet(4, S4);
+    
+    set = S1;
+    set.insert(set.end(), S2.begin(),S2.end());
+    set.insert(set.end(), S3.begin(),S3.end());
+    set.insert(set.end(), S4.begin(),S4.end());
+    
+    vector<double> labels;
+    for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
+    for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
+    for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
+    for (int i = 0; i<S4.size(); i++) {labels.push_back(4);}
 
     EigenRecognizerProb ER(optiNOC);
     cout << kFoldCrossValidationRecognition(ER, set, labels, 7) << endl;
