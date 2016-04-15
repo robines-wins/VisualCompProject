@@ -408,9 +408,9 @@ int main()
 	cout << "size: " << chi << std::endl;
 	cout << "spatialChi " << spatialChi << std::endl;*/
 
-	QMULset *DataSet =  new QMULset("/Users/anthonymarquis/Desktop/Computer Vision/final project/QMUL 2", 1); //Unix bases , thats why 1
-	cout << "Dataset " << DataSet << std::endl;
-	LbpkFoldsCrossValidation(QMULset, DataSet, 1, 0);
+	QMULset QMUL = QMULset("/Users/anthonymarquis/Desktop/Computer Vision/final project/QMUL 2"); //Unix bases , thats why 1
+	LbpkFoldsCrossValidation(QMUL, 2, 1);
+	cout << "DONE " << a << std::endl;
 
 	waitKey(0);
 	destroyAllWindows();
