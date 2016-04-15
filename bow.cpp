@@ -14,7 +14,7 @@
 /* k = 7 */
 void BoWkFoldsCrossValidation(QMULset Dataset, const int numCodewords, bool prob) {
     // initialize non free module or you get seg faults
-    initModule_nonfree()
+    initModule_nonfree();
     
     // randomly shuffle the input data set
     srand(time(0));
