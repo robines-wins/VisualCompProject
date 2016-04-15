@@ -212,14 +212,14 @@ void TrainBoWProb(vector< vector<Mat> > people_set,
 
         // change the input so that calcCovarMatrix can use it
         int samples = imageDescriptors[it].size();
-        Mat input[samples];
+        //Mat input[samples];
         for (int j = 0; j < samples; j++) {
             Mat element = imageDescriptors[it][j];
             element.convertTo(element, CV_64F);
-            input[j] = element;
+            //input[j] = element;
         }
 
-        calcCovarMatrix(input, samples, covar, mean_vector, CV_COVAR_NORMAL);
+        //calcCovarMatrix(input, samples, covar, mean_vector, CV_COVAR_NORMAL);
         covar_mat.push_back(covar);
         mean_vectors.push_back(mean_vector);
     }

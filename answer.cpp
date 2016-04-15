@@ -10,7 +10,7 @@ using namespace cv;
 using namespace std;
 
 void answerQ3(vector<Mat> set){
-    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,set.front().rows*set.front().cols};
+    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,static_cast<int>(set.size())};
     for (int i = 0; i<13; i++) {
         cout<< numC[i] <<endl;
     }
@@ -41,7 +41,8 @@ void answerQ4(vector<Mat> set){
     Mat base = computeEigenBase(train, 10);
     for (int i = 0; i<10; i++) {
         Mat toOutput;
-        base.row(i).reshape(1, 100).convertTo(toOutput, CV_8U);
+        normalize(base.row(i), toOutput,0,255,NORM_MINMAX);
+        toOutput.reshape(1, 100).convertTo(toOutput, CV_8U);
         imwrite(path + "Evector" +to_string(i)+".bmp", toOutput);
     }
 
@@ -72,12 +73,12 @@ void answerQ5(vector<Mat> set, int optimalfromQ3){
 
 void answerQ6(QMULset QMUL){
 
-    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,100*100};
+    int numC[] = {1,2,5,10,20,50,100,200,500,1000,2000,3000,3990};
 
     vector<Mat> S1,S2,S3, set;
     QMUL.getPersonSet(1, S1);
-    QMUL.getPersonSet(1, S2);
-    QMUL.getPersonSet(1, S3);
+    QMUL.getPersonSet(2, S2);
+    QMUL.getPersonSet(3, S3);
 
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());
@@ -99,8 +100,8 @@ void answerQ6(QMULset QMUL){
 void answerQ8(QMULset QMUL, int optiNOC){
     vector<Mat> S1,S2,S3, set;
     QMUL.getPersonSet(1, S1);
-    QMUL.getPersonSet(1, S2);
-    QMUL.getPersonSet(1, S3);
+    QMUL.getPersonSet(2, S2);
+    QMUL.getPersonSet(3, S3);
 
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());

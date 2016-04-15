@@ -50,7 +50,8 @@ Mat computeEigenBase(Mat& data, int numOfComp){
 
     for (int i=0; i<numOfComp; i++) {
         //cout << trueEVector.row(i) <<endl;
-        normalize(trueEVector.row(i), base.row(i));
+        normalize(trueEVector.row(i), base.row(i),1,2,NORM_L2);
+        
         //trueEVector.row(i) = base.row(i);
         //cout << base.row(i) <<endl;
     }
@@ -133,11 +134,13 @@ double kFoldCrossValidationRecognition(EigenRecognizer& ER,vector<Mat> imgSet, v
     vector<int> indexs = randomIndexes(imgSet.size());
     double recognition = 0.0;
 
-    vector<Mat> train,test;
-    vector<double> trainl,testl;
+    
     uint imgperfold = imgSet.size()/k;
 
     for (int i = 0; i<k; i++) {
+        
+        vector<Mat> train,test;
+        vector<double> trainl,testl;
 
         for (int j=0; j<imgSet.size(); j++) {
             if (j>=i*imgperfold && j<(i+1)*imgperfold) {
