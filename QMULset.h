@@ -14,6 +14,8 @@ private:
 public:
     QMULset(string path,bool UNIXenv = true);
 
+    int peopleCount();
+
     Mat get(string subjectName, int tilt, int pan);
 
     Mat get(int subjectNameIndex, int tilt, int pan);

@@ -1,7 +1,7 @@
-
 #include "answer.h"
 #include <opencv2/opencv.hpp>
 #include "EigenFaces.h"
+#include "lbp.h"
 #include "EigenFacePoseEstimation.h"
 
 #define PATH_FOR_OUTPUT "/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/"
@@ -104,34 +104,34 @@ void answerQ6(QMULset QMUL){
 
 void answerQ7(QMULset QMUL, int optiNOC){
     EigenRecognizerNorm ER(optiNOC);
-    
+
     vector<Mat> S1,S2,S3,S4, set;
     QMUL.getPersonSet(1, S1);
     QMUL.getPersonSet(2, S2);
     QMUL.getPersonSet(3, S3);
     QMUL.getPersonSet(4, S4);
-    
+
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());
     set.insert(set.end(), S3.begin(),S3.end());
     set.insert(set.end(), S4.begin(),S4.end());
-    
+
     vector<double> labels;
     for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
     for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
     for (int i = 0; i<S3.size(); i++) {labels.push_back(3);}
     for (int i = 0; i<S4.size(); i++) {labels.push_back(4);}
-    
-    
+
+
     vector<int> indexs = randomIndexes(set.size());
-    
+
     int i = rand()/7;
-    
+
     uint imgperfold = set.size()/7;
-        
+
     vector<Mat> train,test;
     vector<double> trainl,testl;
-        
+
     for (int j=0; j<set.size(); j++) {
         if (j>=i*imgperfold && j<(i+1)*imgperfold) {
             test.push_back(set[indexs[j]]);
@@ -142,9 +142,9 @@ void answerQ7(QMULset QMUL, int optiNOC){
             trainl.push_back(labels[indexs[j]]);
         }
     }
-        
+
     ER.train(train, trainl);
-    
+
     int good = 0, bad =0;
     string path = PATH_FOR_OUTPUT;
     for (int j=0; j<test.size() && good<2 && bad<2; j++) {
@@ -153,7 +153,7 @@ void answerQ7(QMULset QMUL, int optiNOC){
             imwrite(path + "goodLabelise_" + to_string(good) +".bmp" , testl[j]);
         }
     }
-    
+
 }
 
 void answerQ8(QMULset QMUL, int optiNOC){
@@ -162,12 +162,12 @@ void answerQ8(QMULset QMUL, int optiNOC){
     QMUL.getPersonSet(2, S2);
     QMUL.getPersonSet(3, S3);
     QMUL.getPersonSet(4, S4);
-    
+
     set = S1;
     set.insert(set.end(), S2.begin(),S2.end());
     set.insert(set.end(), S3.begin(),S3.end());
     set.insert(set.end(), S4.begin(),S4.end());
-    
+
     vector<double> labels;
     for (int i = 0; i<S1.size(); i++) {labels.push_back(1);}
     for (int i = 0; i<S2.size(); i++) {labels.push_back(2);}
@@ -177,6 +177,16 @@ void answerQ8(QMULset QMUL, int optiNOC){
     EigenRecognizerProb ER(optiNOC);
     cout << kFoldCrossValidationRecognition(ER, set, labels, 7) << endl;
 
+}
+
+void answerQ11(QMULset QMUL) {
+    vector<vector<Mat>> allPeople;
+    allPeople.resize(QMUL.peopleCount());
+    for (int i = 0; i < QMUL.peopleCount(); i++) {
+        QMUL.getPersonSet(i, allPeople[i]);
+    }
+    cout << "Regular: " << LbpkFoldsCrossValidation(allPeople, 2, 7, true) << endl;
+    cout << "Probabilistic: " << LbpkFoldsCrossValidation(allPeople, 2, 7, true) << endl;
 }
 
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {

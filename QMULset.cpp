@@ -80,6 +80,10 @@ QMULset::QMULset(string path, bool UNIXenv){
     }
 }
 
+int QMULset::peopleCount() {
+    return img.size();
+}
+
 //get image by knoing subject name, tilt in [-30;30] and pan in [-90; 90]
 Mat QMULset::get(string subjectName, int tilt, int pan) {
     map<string, int>::iterator pair = nameMap.find(subjectName);

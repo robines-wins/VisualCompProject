@@ -30,6 +30,8 @@ void answerQ7(QMULset QMUL, int optiNOC);
 
 void answerQ8(QMULset QMUL, int optiNOC);
 
+void answerQ11(QMULset QMUL);
+
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses);
 
 #endif /* answer_h */

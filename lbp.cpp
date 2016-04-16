@@ -1,16 +1,11 @@
 #include "lbp.h"
-#include "QMULset.h"
-
 
 #define DISPLAY 0
-#define PEOPLE 31
 #define PICTURES_PER_PERSON 133
 #define TESTING 5
-#define K 7
 
 using namespace cv;
 using namespace std;
-
 
 Mat createLbpHistorgram(Mat image, int numGridHorizontal, int numGridVertical) {
 	// Table for bins to put each lbp number
@@ -186,7 +181,7 @@ double calculateSpatialChi(Mat histogram1, Mat histogram2){
 	return spatialChi;
 }
 
-void TrainLbp(vector< vector<Mat> > people_set,
+void TrainLbp(vector< vector<Mat> >& people_set,
         vector<vector <Mat> > &imageDescriptors,
         const int levels,
         const int partitionStart,
@@ -196,7 +191,6 @@ void TrainLbp(vector< vector<Mat> > people_set,
     for (unsigned int i = 0; i < people_set.size(); i++) {
         // each image of each category
         vector<Mat> category_descriptors;
-        cout << "people_set " << i << std::endl;
         for (unsigned int j = (partitionStart == 0) ? partitionSize : 0; j < people_set[i].size(); j++) {
             if (j == partitionStart) {
                 j += partitionSize-1;
@@ -214,8 +208,8 @@ void TrainLbp(vector< vector<Mat> > people_set,
     }
 }
 
-void TestLbp(vector< vector<Mat> > people_set,
-             const vector<vector <Mat> > imageDescriptors,
+void TestLbp(vector< vector<Mat> >& people_set,
+             const vector<vector <Mat> >& imageDescriptors,
              const int levels,
              const int partitionStart,
              const int partitionSize,
@@ -254,7 +248,7 @@ void TestLbp(vector< vector<Mat> > people_set,
     recognition = double(numCorrect) / double(people_set.size() * partitionSize);
 }
 
-void TrainLbpProb(vector< vector<Mat> > people_set,
+void TrainLbpProb(vector< vector<Mat> >& people_set,
                   vector<vector<Mat> > &imageDescriptors,
                   const int levels,
                   const int partitionStart,
@@ -283,12 +277,12 @@ void TrainLbpProb(vector< vector<Mat> > people_set,
     }
 }
 
-void TestLbpProb(vector< vector<Mat> > people_set,
+void TestLbpProb(vector< vector<Mat> >& people_set,
                  const int levels,
                  const int partitionStart,
                  const int partitionSize,
-                 const vector<Mat> covar,
-                 const vector<Mat> mean_vector,
+                 const vector<Mat>& covar,
+                 const vector<Mat>& mean_vector,
                  double &recognition) {
 
     int numCorrect = 0;
@@ -321,31 +315,27 @@ void TestLbpProb(vector< vector<Mat> > people_set,
     recognition = numCorrect / (people_set.size() * partitionSize);
 }
 
-/* k = 7 */
-void LbpkFoldsCrossValidation(QMULset Dataset, const int levels, bool prob) {
+double LbpkFoldsCrossValidation(vector< vector<Mat> >& people_set, const int levels, int k, bool prob) {
     // randomly shuffle the input data set
     srand(time(0));
-    vector< vector<Mat> > people_set((PEOPLE));
-    for (unsigned int it = 0; it < PEOPLE; it++) {
-        Dataset.getPersonSet(it, people_set[it]);
-        random_shuffle(people_set[it].begin(), people_set[it].end());
-    }
+	for (size_t it = 0; it < people_set.size(); it++) {
+		random_shuffle(people_set[it].begin(), people_set[it].end());
+	}
 
     // validate for k = 7 fold
-    int partition = PICTURES_PER_PERSON / K;
+    int partition = PICTURES_PER_PERSON / k;
     double avg_recognition = 0;
     if (!prob) {
-        for (unsigned int it = 0; it < K; it++) {
+        for (unsigned int it = 0; it < k; it++) {
             vector<vector<Mat> > imageDescriptors;
             int partitionStart = it * partition;
             TrainLbp(people_set, imageDescriptors, levels, partitionStart, partition);
             double recognition;
             TestLbp(people_set, imageDescriptors, levels, partitionStart, partition, recognition);
             avg_recognition += recognition;
-            cout << "avg_recognition " << avg_recognition << std::endl;
         }
     } else {
-        for (unsigned int it = 0; it < K; it++) {
+        for (unsigned int it = 0; it < k; it++) {
             Mat codeBook;
             vector<vector<Mat> > imageDescriptors;
             int partitionStart = it * partition;
@@ -355,59 +345,7 @@ void LbpkFoldsCrossValidation(QMULset Dataset, const int levels, bool prob) {
             double recognition;
             TestLbpProb(people_set, levels, partitionStart, partition, covar_mat, mean_vectors, recognition);
             avg_recognition += recognition;
-            cout << "avg_recognition " << avg_recognition << std::endl;
         }
     }
-    avg_recognition /= K;
-
-    cout << ((prob) ? "probabilistic: " : "regular: ") << levels << ": " << avg_recognition * 100 << "%" << endl;
-}
-
-int main()
-{
-	//cv::Mat tempImage = imread("/Users/anthonymarquis/Desktop/Computer Vision/final project/HeadPoseImageDatabase/Person01/person01141+0-75.jpg");
-	cv::Mat tempImage = imread("/Users/anthonymarquis/Desktop/Computer Vision/final project/QMUL 2/AdamBGrey/AdamB_060_000.ras");
-	cv::Mat tempImage2 = imread("/Users/anthonymarquis/Desktop/Computer Vision/final project/QMUL 2/AdamBGrey/AdamB_020_070.ras");
-
-	cv::Mat image(tempImage.rows, tempImage.cols, CV_8UC1);
-	cv::Mat lbpImage(tempImage.rows, tempImage.cols, CV_8UC1);
-	int a = 0;
-	// If RGB put in grayscale
-	if (tempImage.channels() == 3){
-		cvtColor(tempImage, image, CV_BGR2GRAY);
-    }
-
-	cv::Mat image2(tempImage.rows, tempImage.cols, CV_8UC1);
-	cv::Mat lbpImage2(tempImage.rows, tempImage.cols, CV_8UC1);
-
-	// If RGB put in grayscale
-	if (tempImage2.channels() == 3){
-		cvtColor(tempImage2, image2, CV_BGR2GRAY);
-    }
-
-
-	// Create the Histogram
-	/*Mat hist = Mat::zeros(1,59,CV_32F);
-	cout << "a " << a << std::endl;
-	Mat fullHistogram = createSpatialPyramidHistogram(image, 1);
-	cout << "b " << a << std::endl;
-	Mat fullHistogram2 = createSpatialPyramidHistogram(image2, 31);
-	cout << "c " << a << std::endl;
-	double chi = calculateChiSquare(fullHistogram, fullHistogram2);
-	double spatialChi = calculateSpatialChi(fullHistogram, fullHistogram2);
-	cout << "d " << a << std::endl;
-	//imshow("lbp_image", lbpImage);
-
-	cout << "hist: " << fullHistogram << std::endl;
-	cout << "size: " << fullHistogram.size() << std::endl;
-	cout << "size: " << tempImage.size() << std::endl;
-	cout << "size: " << chi << std::endl;
-	cout << "spatialChi " << spatialChi << std::endl;*/
-
-	QMULset QMUL = QMULset("/Users/anthonymarquis/Desktop/Computer Vision/final project/QMUL 2"); //Unix bases , thats why 1
-	LbpkFoldsCrossValidation(QMUL, 2, 1);
-	cout << "DONE " << a << std::endl;
-
-	waitKey(0);
-	destroyAllWindows();
+    return avg_recognition / k;
 }
