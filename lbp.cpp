@@ -236,6 +236,15 @@ void TestLbp(vector< vector<Mat> >& people_set,
                     if (dist < best_dist) {
                         best_dist = dist;
                         best_m = m;
+                        // For question 10. Copy 2 correct and 2 incorrect matches arrays into matlab and draw the histrogram from matlab matrix for better graphs
+                        /*if (best_m == i){
+                        	cout << "Good test image with down " << imageDescriptors[m][n] << std::endl;
+                        	cout << "Good test image with up " << histogram << std::endl;
+                        }
+                        if (best_m != i){
+				cout << "Bad test image with down " << imageDescriptors[m][n] << std::endl;
+				cout << "Bad test image with up " << histogram << std::endl;
+			}*/
                     }
                 }
             }
