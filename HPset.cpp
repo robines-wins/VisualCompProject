@@ -90,6 +90,9 @@ HPset::HPset(string path, bool UNIXenv) {
             fscanf(info, "%s\n\nFace\n%d\n%d", imageName, &centerX, &centerY);
             sscanf(imageName, "person%2d%1d%2d%d%d.jpg", &id, &serie, &number, &tilt, &pan);
             fclose(info);
+            // Filp tilt and pan to match QMUL standard
+            tilt *= -1;
+            pan *= -1;
             // Discard images with tilt angles greater than +- 30
             if (tilt < -30 || tilt > 30) {
                 continue;

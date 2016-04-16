@@ -25,8 +25,6 @@ int main(int argc, const char * argv[]) {
 
     QMULset QMUL = QMULset(string(qmul));
 
-    answerQ11(QMUL);
-
     HPset HP = HPset(string(hp));
 
     int coarseTilts[] = {-25, 0, 25};
@@ -37,4 +35,5 @@ int main(int argc, const char * argv[]) {
     answerQ16_1(QMUL, HP, tiltClasses, panClasses);
 
     return 0;
+
 }
