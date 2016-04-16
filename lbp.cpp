@@ -1,10 +1,6 @@
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/core/core.hpp"
-#include "opencv2/opencv.hpp"
-#include "vector"
-#include <math.h>
-
 #include "lbp.h"
+#include "QMULset.h"
+
 
 #define DISPLAY 0
 #define PEOPLE 31
@@ -376,7 +372,7 @@ int main()
 	cv::Mat image(tempImage.rows, tempImage.cols, CV_8UC1);
 	cv::Mat lbpImage(tempImage.rows, tempImage.cols, CV_8UC1);
 	int a = 0;
-	// If RGD put in grayscale
+	// If RGB put in grayscale
 	if (tempImage.channels() == 3){
 		cvtColor(tempImage, image, CV_BGR2GRAY);
     }
@@ -384,7 +380,7 @@ int main()
 	cv::Mat image2(tempImage.rows, tempImage.cols, CV_8UC1);
 	cv::Mat lbpImage2(tempImage.rows, tempImage.cols, CV_8UC1);
 
-	// If RGD put in grayscale
+	// If RGB put in grayscale
 	if (tempImage2.channels() == 3){
 		cvtColor(tempImage2, image2, CV_BGR2GRAY);
     }

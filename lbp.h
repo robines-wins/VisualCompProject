@@ -1,13 +1,12 @@
 #ifndef LBP_H
 #define LBP_H
 
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/core/core.hpp"
-#include "opencv2/opencv.hpp"
-#include "vector"
+#include <opencv2/opencv.hpp>
+#include <vector>
 #include <math.h>
 
-#include "QMULset.h"
+using namespace cv;
+using namespace std;
 
 const double pi = 3.1415926;
 
