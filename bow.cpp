@@ -11,11 +11,13 @@
 #define PICTURES_PER_PERSON 133
 #define K 7
 
+const double pi = 3.1415926;
+
 /* k = 7 */
 void BoWkFoldsCrossValidation(QMULset Dataset, const int numCodewords, bool prob) {
     // initialize non free module or you get seg faults
     initModule_nonfree();
-    
+
     // randomly shuffle the input data set
     srand(time(0));
     vector< vector<Mat> > people_set((PEOPLE));
@@ -234,6 +236,51 @@ void TestBoW(vector< vector<Mat> > people_set,
     }
 
     recognition = double(numCorrect) / double(people_set.size() * partitionSize);
+}
+
+int FindBestBoWMatch(Mat pose,
+             const Mat codeBook,
+             const vector<vector<Mat>> imageDescriptors)
+{
+    // Create a SIFT feature detector object
+    Ptr<FeatureDetector> featureDetector = FeatureDetector::create("SIFT");
+
+    // Create a SIFT descriptor extractor object
+    Ptr<DescriptorExtractor> descriptorExtractor = DescriptorExtractor::create("SIFT");
+
+    // BOW histogram for each image
+    Ptr<DescriptorMatcher> descriptorMatcher = DescriptorMatcher::create("BruteForce");
+    Ptr<BOWImgDescriptorExtractor> bowDExtractor = new BOWImgDescriptorExtractor(descriptorExtractor, descriptorMatcher);
+
+    bowDExtractor->setVocabulary(codeBook);
+
+    // detect key points
+    vector<KeyPoint> keyPoints;
+    featureDetector->detect(pose, keyPoints);
+
+    // Compute histogram representation
+    Mat histogram;
+    bowDExtractor->compute2(pose, keyPoints, histogram);
+
+    // compare and find the best matching histogram
+    double best_dist = numeric_limits<double>::max();
+    unsigned int best_m = -1;
+    for (unsigned int m = 0; m < imageDescriptors.size(); m++) {
+        for (unsigned int n = 0; n < imageDescriptors[m].size(); n++) {
+            // use chi square distance to compare histograms
+            Mat diff = histogram - imageDescriptors[m][n];
+            Mat numerator = diff.mul(diff);
+            Mat denominator = 1 / (histogram + imageDescriptors[m][n]);
+            double dist = sum(numerator.mul(denominator))[0];
+
+            if (dist < best_dist) {
+                best_dist = dist;
+                best_m = m;
+            }
+        }
+    }
+
+    return best_m;
 }
 
 void TrainBoWProb(vector< vector<Mat> > people_set,

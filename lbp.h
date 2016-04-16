@@ -7,8 +7,6 @@
 using namespace cv;
 using namespace std;
 
-const double pi = 3.1415926;
-
 Mat createSpatialPyramidHistogram(Mat image, int Level);
 
 Mat createLbpHistorgram(Mat image, int numGridHorizontal, int numGridVertical);
@@ -47,6 +45,10 @@ void TestLbpProb(vector< vector<Mat> >& people_set,
                  const vector<Mat>& covar,
                  const vector<Mat>& mean_vector,
                  double &recognition);
+
+int FindBestLbpMatch(Mat pose,
+             const vector<vector <Mat> >& imageDescriptors,
+ 		 	 const int levels);
 
 double LbpkFoldsCrossValidation(vector< vector<Mat> >& people_set, const int levels, int k, bool prob);
 

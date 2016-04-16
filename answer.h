@@ -34,4 +34,8 @@ void answerQ11(QMULset QMUL);
 
 void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses);
 
+void answerQ16_2(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses);
+
+void answerQ16_3(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses);
+
 #endif /* answer_h */

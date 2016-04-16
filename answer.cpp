@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include "EigenFaces.h"
 #include "lbp.h"
+#include "bow.h"
 #include "EigenFacePoseEstimation.h"
 
 #define PATH_FOR_OUTPUT "/Users/Mac-Robin/Documents/CompVis/Project/Project/outputimages/"
@@ -179,6 +180,21 @@ void answerQ8(QMULset QMUL, int optiNOC){
 
 }
 
+void prettyPrintMatrix(Mat m) {
+    // Pretty print the confusion matrix with fixed precision
+    cout.setf(ios::fixed, ios::floatfield);
+    cout.precision(2);
+    cout << "[" << endl;
+    for (size_t row = 0; row < m.rows; row++) {
+        cout << "    ";
+        for (size_t col = 0; col < m.cols; col++) {
+            cout << m.at<float>(row, col) << "  ";
+        }
+        cout << endl;
+    }
+    cout << "]" << endl;
+}
+
 void answerQ11(QMULset QMUL) {
     vector<vector<Mat>> allPeople;
     allPeople.resize(QMUL.peopleCount());
@@ -195,7 +211,7 @@ void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> pa
     size_t numberPoses = numOfTiltClasses * numOfPanClasses;
     Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32F);
     // Train the estimator for each pose use QMUL
-    EigenFacePoseEstimator estimator(numberPoses, 30);
+    EigenFacePoseEstimator estimator(numberPoses, 120);
     for (size_t i = 0; i < numOfTiltClasses; i++) {
         for (size_t j = 0; j < numOfPanClasses; j++) {
             vector<Mat> coarsePoses;
@@ -223,15 +239,84 @@ void answerQ16_1(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> pa
         }
     }
     // Pretty print the confusion matrix with fixed precision
-    cout.setf(ios::fixed, ios::floatfield);
-    cout.precision(2);
-    cout << "[" << endl;
-    for (size_t row = 0; row < numberPoses; row++) {
-        cout << "    ";
-        for (size_t col = 0; col < numberPoses; col++) {
-            cout << confusion.at<float>(row, col) << "  ";
+    prettyPrintMatrix(confusion);
+}
+
+void answerQ16_2(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {
+    size_t numOfTiltClasses = tiltClasses.size();
+    size_t numOfPanClasses = panClasses.size();
+    size_t numberPoses = numOfTiltClasses * numOfPanClasses;
+    Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32F);
+    // Create a set of poses
+    vector<vector<Mat>> poses;
+    for (size_t i = 0; i < numOfTiltClasses; i++) {
+        for (size_t j = 0; j < numOfPanClasses; j++) {
+            vector<Mat> coarsePoses;
+            qmul.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
+            poses.push_back(coarsePoses);
         }
-        cout << endl;
     }
-    cout << "]" << endl;
+    // Train LBP on poses instead of persons
+    int levels = 2;
+    vector<vector<Mat>> imageDescriptors;
+    TrainLbp(poses, imageDescriptors, levels, -1, 0);
+    // Estimate the poses from HP using the trained poses
+    for (size_t i = 0; i < numOfTiltClasses; i++) {
+        for (size_t j = 0; j < numOfPanClasses; j++) {
+            vector<Mat> coarsePoses;
+            hp.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
+            size_t index = i * numOfPanClasses + j;
+            for (size_t k = 0; k < coarsePoses.size(); k++) {
+                size_t guess = FindBestLbpMatch(coarsePoses[k], imageDescriptors, levels);
+                confusion.at<float>(index, guess)++;
+                cout << "Estimated pose " << index << " as " << guess << endl;
+            }
+            // Normalize the confusion row
+            for (int col = 0; col < numberPoses; col++) {
+                confusion.at<float>(index, col) /= coarsePoses.size();
+            }
+        }
+    }
+    // Pretty print the confusion matrix with fixed precision
+    prettyPrintMatrix(confusion);
+}
+
+void answerQ16_3(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> panClasses) {
+    size_t numOfTiltClasses = tiltClasses.size();
+    size_t numOfPanClasses = panClasses.size();
+    size_t numberPoses = numOfTiltClasses * numOfPanClasses;
+    Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32F);
+    // Create a set of poses
+    vector<vector<Mat>> poses;
+    for (size_t i = 0; i < numOfTiltClasses; i++) {
+        for (size_t j = 0; j < numOfPanClasses; j++) {
+            vector<Mat> coarsePoses;
+            qmul.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
+            poses.push_back(coarsePoses);
+        }
+    }
+    // Train LBP on poses instead of persons
+    int codewords = 900;
+    Mat codeBook;
+    vector<vector<Mat>> imageDescriptors;
+    TrainBoW(poses, codeBook, imageDescriptors, codewords, -1, 0);
+    // Estimate the poses from HP using the trained poses
+    for (size_t i = 0; i < numOfTiltClasses; i++) {
+        for (size_t j = 0; j < numOfPanClasses; j++) {
+            vector<Mat> coarsePoses;
+            hp.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
+            size_t index = i * numOfPanClasses + j;
+            for (size_t k = 0; k < coarsePoses.size(); k++) {
+                size_t guess = FindBestBoWMatch(coarsePoses[k], codeBook, imageDescriptors);
+                confusion.at<float>(index, guess)++;
+                cout << "Estimated pose " << index << " as " << guess << endl;
+            }
+            // Normalize the confusion row
+            for (int col = 0; col < numberPoses; col++) {
+                confusion.at<float>(index, col) /= coarsePoses.size();
+            }
+        }
+    }
+    // Pretty print the confusion matrix with fixed precision
+    prettyPrintMatrix(confusion);
 }

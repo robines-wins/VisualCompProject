@@ -7,6 +7,8 @@
 using namespace cv;
 using namespace std;
 
+const double pi = 3.1415926;
+
 Mat createLbpHistorgram(Mat image, int numGridHorizontal, int numGridVertical) {
 	// Table for bins to put each lbp number
 	const char binTable[256] = {
@@ -255,6 +257,28 @@ void TestLbp(vector< vector<Mat> >& people_set,
     }
 
     recognition = double(numCorrect) / double(people_set.size() * partitionSize);
+}
+
+int FindBestLbpMatch(Mat pose,
+             const vector<vector <Mat> >& imageDescriptors,
+		 	 const int levels)
+{
+    // Compute histogram representation
+    Mat histogram = createSpatialPyramidHistogram(pose, levels);
+
+    // compare and find the best matching histogram
+    double best_dist = numeric_limits<double>::max();
+    unsigned int best_m = 0;
+    for (unsigned int m = 0; m < imageDescriptors.size(); m++) {
+        for (unsigned int n = 0; n < imageDescriptors[m].size(); n++) {
+            double dist = calculateSpatialChi(histogram, imageDescriptors[m][n]);
+            if (dist < best_dist) {
+                best_dist = dist;
+                best_m = m;
+            }
+        }
+    }
+	return best_m;
 }
 
 void TrainLbpProb(vector< vector<Mat> >& people_set,

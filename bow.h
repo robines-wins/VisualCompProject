@@ -6,8 +6,6 @@
 #include <opencv2/nonfree/nonfree.hpp>
 #include "QMULset.h"
 
-const double pi = 3.1415926;
-
 void BoWkFoldsCrossValidation(QMULset Dataset, const int numCodewords, bool prob);
 void TrainBoW(vector< vector<Mat> > people_set,
               Mat &codeBook,
@@ -36,5 +34,9 @@ void TestBoWProb(vector< vector<Mat> > people_set,
                  const vector<Mat> covar,
                  const vector<Mat> mean_vector,
                  double &recognition);
+
+int FindBestBoWMatch(Mat pose,
+          const Mat codeBook,
+          const vector<vector<Mat>> imageDescriptors);
 
 #endif // BOW_H
