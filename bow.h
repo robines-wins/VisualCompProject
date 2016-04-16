@@ -35,7 +35,7 @@ void TestBoWProb(vector< vector<Mat> > people_set,
                  const vector<Mat> mean_vector,
                  double &recognition);
 
-int FindBestBoWMatch(Mat pose,
+double FindBestBoWDistance(Mat pose,
           const Mat codeBook,
           const vector<vector<Mat>> imageDescriptors);
 

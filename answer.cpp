@@ -286,20 +286,22 @@ void answerQ16_3(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> pa
     size_t numOfPanClasses = panClasses.size();
     size_t numberPoses = numOfTiltClasses * numOfPanClasses;
     Mat confusion = Mat::zeros(numberPoses, numberPoses, CV_32F);
-    // Create a set of poses
-    vector<vector<Mat>> poses;
+    // Train one BoW per pose
+    int codewords = 900;
+    vector<Mat> codeBooks;
+    codeBooks.resize(numberPoses);
+    vector<vector<vector<Mat>>> imageDescriptors;
+    imageDescriptors.resize(numberPoses);
     for (size_t i = 0; i < numOfTiltClasses; i++) {
         for (size_t j = 0; j < numOfPanClasses; j++) {
             vector<Mat> coarsePoses;
             qmul.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
+            vector<vector<Mat>> poses;
             poses.push_back(coarsePoses);
+            size_t index = i * numOfPanClasses + j;
+            TrainBoW(poses, codeBooks[index], imageDescriptors[index], codewords, -1, 0);
         }
     }
-    // Train LBP on poses instead of persons
-    int codewords = 900;
-    Mat codeBook;
-    vector<vector<Mat>> imageDescriptors;
-    TrainBoW(poses, codeBook, imageDescriptors, codewords, -1, 0);
     // Estimate the poses from HP using the trained poses
     for (size_t i = 0; i < numOfTiltClasses; i++) {
         for (size_t j = 0; j < numOfPanClasses; j++) {
@@ -307,9 +309,18 @@ void answerQ16_3(QMULset qmul, HPset hp, vector<int> tiltClasses, vector<int> pa
             hp.getCoarsePoseSet(tiltClasses, panClasses, i, j, coarsePoses);
             size_t index = i * numOfPanClasses + j;
             for (size_t k = 0; k < coarsePoses.size(); k++) {
-                size_t guess = FindBestBoWMatch(coarsePoses[k], codeBook, imageDescriptors);
-                confusion.at<float>(index, guess)++;
-                cout << "Estimated pose " << index << " as " << guess << endl;
+                // Try each BoW on the pose, find the closest one as the guess
+                double best_dist = numeric_limits<double>::max();
+                size_t best_bow = -1;
+                for (size_t bow = 0; bow < numberPoses; bow++) {
+                    double dist = FindBestBoWDistance(coarsePoses[k], codeBooks[bow], imageDescriptors[bow]);
+                    if (dist < best_dist) {
+                        best_dist = dist;
+                        best_bow = bow;
+                    }
+                }
+                confusion.at<float>(index, best_bow)++;
+                cout << "Estimated pose " << index << " as " << best_bow << endl;
             }
             // Normalize the confusion row
             for (int col = 0; col < numberPoses; col++) {

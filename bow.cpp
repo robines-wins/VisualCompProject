@@ -238,7 +238,7 @@ void TestBoW(vector< vector<Mat> > people_set,
     recognition = double(numCorrect) / double(people_set.size() * partitionSize);
 }
 
-int FindBestBoWMatch(Mat pose,
+double FindBestBoWDistance(Mat pose,
              const Mat codeBook,
              const vector<vector<Mat>> imageDescriptors)
 {
@@ -264,7 +264,6 @@ int FindBestBoWMatch(Mat pose,
 
     // compare and find the best matching histogram
     double best_dist = numeric_limits<double>::max();
-    unsigned int best_m = -1;
     for (unsigned int m = 0; m < imageDescriptors.size(); m++) {
         for (unsigned int n = 0; n < imageDescriptors[m].size(); n++) {
             // use chi square distance to compare histograms
@@ -275,12 +274,11 @@ int FindBestBoWMatch(Mat pose,
 
             if (dist < best_dist) {
                 best_dist = dist;
-                best_m = m;
             }
         }
     }
 
-    return best_m;
+    return best_dist;
 }
 
 void TrainBoWProb(vector< vector<Mat> > people_set,
